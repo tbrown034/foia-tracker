@@ -21,12 +21,6 @@ function fmt(n: number | null): string {
   return n.toLocaleString();
 }
 
-function fmtSigned(n: number | null): string {
-  if (n == null) return "—";
-  const sign = n > 0 ? "+" : "";
-  return `${sign}${n.toLocaleString()}`;
-}
-
 function fmtDelta(pct: number | null): string {
   if (pct == null) return "—";
   const sign = pct > 0 ? "+" : "";
@@ -100,10 +94,6 @@ export default async function Home() {
   const worstThroughput = [...throughput].sort(
     (a, b) => a.catch_up_ratio - b.catch_up_ratio
   )[0];
-  const dojOldestYears =
-    stats.doj_oldest_days != null
-      ? (stats.doj_oldest_days / 365).toFixed(1)
-      : "—";
   const overallOldestYears =
     stats.oldest_overall_days != null
       ? (stats.oldest_overall_days / 365).toFixed(1)
@@ -111,7 +101,7 @@ export default async function Home() {
 
   return (
     <SiteShell>
-      <article className="mx-auto max-w-3xl w-full px-6 pt-14 pb-12">
+      <article className="mx-auto max-w-5xl w-full px-6 pt-14 pb-12">
         {/* Kicker */}
         <p className="font-display italic text-stone-500 text-sm">
           Federal records requests · five quarters · {stats.baseline_label}–
@@ -119,12 +109,12 @@ export default async function Home() {
         </p>
 
         {/* Headline — neutral, descriptive */}
-        <h1 className="font-display text-stone-900 text-5xl md:text-7xl leading-[0.95] mt-3">
+        <h1 className="font-display text-stone-900 text-4xl md:text-6xl leading-[1] mt-3 max-w-3xl">
           The federal FOIA backlog
         </h1>
 
         {/* Hero stat woven into the standfirst */}
-        <p className="font-display text-stone-900 text-xl md:text-2xl leading-snug mt-7 max-w-2xl">
+        <p className="font-display text-stone-900 text-lg md:text-xl leading-snug mt-7 max-w-prose">
           As of the close of {stats.current_label}, federal agencies are
           holding{" "}
           <span className="tabular-nums">{fmt(stats.total_current)}</span>{" "}
@@ -141,14 +131,14 @@ export default async function Home() {
         </p>
 
         {/* Lede / dateline */}
-        <p className="font-display text-stone-700 text-base italic mt-5 max-w-2xl leading-relaxed">
+        <p className="text-stone-600 text-sm italic mt-5 max-w-prose leading-relaxed">
           The numbers are self-reported by agencies under the FOIA Improvement
           Act of 2016. They include perfected requests still open at quarter
           end and exclude administrative appeals. Updated {updatedAt}.
         </p>
       </article>
 
-      <section className="mx-auto max-w-5xl w-full px-6 mt-16">
+      <section className="mx-auto max-w-5xl w-full px-6 mt-8">
         <p className="font-display italic text-stone-500 text-sm">
           Slope chart · top 20 agencies by absolute change in backlog
         </p>
@@ -376,7 +366,7 @@ export default async function Home() {
 
       {/* Wall of Shame */}
       {wall.length > 0 && (
-        <section className="mx-auto max-w-3xl w-full px-6 mt-20 mb-16">
+        <section className="mx-auto max-w-5xl w-full px-6 mt-20 mb-16">
           <p className="font-display italic text-stone-500 text-sm">
             Wall of Shame · cross-agency
           </p>
@@ -433,7 +423,7 @@ export default async function Home() {
       )}
 
       {/* Reading list */}
-      <section className="mx-auto max-w-3xl w-full px-6 mt-20 mb-16 border-t border-stone-200 pt-10">
+      <section className="mx-auto max-w-5xl w-full px-6 mt-20 mb-16 border-t border-stone-200 pt-10">
         <p className="font-display italic text-stone-500 text-sm">
           Further reading
         </p>

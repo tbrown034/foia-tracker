@@ -390,6 +390,83 @@ export async function getSlopeChartData(): Promise<SlopeChartData> {
   };
 }
 
+// ---------- Bridged annual + quarterly timeline ----------
+
+export type TimelinePoint = {
+  /** Decimal year for the END of the period (e.g. FY2024 → 2024.75). */
+  x: number;
+  /** Sum of pending_end (annual) or backlog (quarterly) across agencies. */
+  y: number | null;
+  /** Display label for tooltips. */
+  label: string;
+};
+
+export type BridgedTimeline = {
+  annual: TimelinePoint[];
+  quarterly: TimelinePoint[];
+};
+
+/**
+ * Total federal FOIA pending across every agency, with annual values
+ * FY2008-FY2024 and quarterly values from FY2025 Q1 onward (so the
+ * series don't overlap). Both segments use end-of-period decimal years
+ * for the x-axis, so the chart reads as one continuous timeline even
+ * though the metric definitions differ slightly.
+ */
+export async function getBridgedTimeline(): Promise<BridgedTimeline> {
+  const annualRows = (await sql`
+    SELECT fiscal_year, SUM(pending_end)::int AS total
+    FROM foia_annual
+    WHERE component = 'Agency Overall'
+      AND agency <> 'All agencies'
+      AND pending_end IS NOT NULL
+    GROUP BY fiscal_year
+    ORDER BY fiscal_year
+  `) as { fiscal_year: number; total: number | null }[];
+
+  const quarterlyRows = (await sql`
+    SELECT fiscal_year, fiscal_quarter, SUM(backlog)::int AS total
+    FROM foia_quarterly
+    WHERE component = 'Agency Overall'
+      AND agency <> 'All agencies'
+      AND backlog IS NOT NULL
+      AND (fiscal_year > 2024 OR (fiscal_year = 2024 AND fiscal_quarter = 4))
+    GROUP BY fiscal_year, fiscal_quarter
+    ORDER BY fiscal_year, fiscal_quarter
+  `) as {
+    fiscal_year: number;
+    fiscal_quarter: number;
+    total: number | null;
+  }[];
+
+  // Federal fiscal years end Sept 30. So FY2024 → x = 2024 + 9/12 = 2024.75.
+  const fyEndOffset = 9 / 12;
+
+  const annual: TimelinePoint[] = annualRows.map((r) => ({
+    x: r.fiscal_year + fyEndOffset,
+    y: r.total,
+    label: `FY${r.fiscal_year}`,
+  }));
+
+  // Quarter end months: Q1 → Dec 31, Q2 → Mar 31, Q3 → Jun 30, Q4 → Sep 30.
+  // Of the calendar year that contains the END of the quarter:
+  // FY2025 Q1 ends Dec 31, 2024 → x = 2024 + 12/12 = 2025.
+  // FY2025 Q2 ends Mar 31, 2025 → x = 2025 + 3/12 = 2025.25.
+  function quarterEndX(fy: number, q: number): number {
+    const calendarYear = q === 1 ? fy - 1 : fy;
+    const monthFraction = q === 1 ? 12 / 12 : ((q - 1) * 3) / 12;
+    return calendarYear + monthFraction;
+  }
+
+  const quarterly: TimelinePoint[] = quarterlyRows.map((r) => ({
+    x: quarterEndX(r.fiscal_year, r.fiscal_quarter),
+    y: r.total,
+    label: `FY${r.fiscal_year} Q${r.fiscal_quarter}`,
+  }));
+
+  return { annual, quarterly };
+}
+
 // ---------- Editorial standfirst stats ----------
 
 export type EditorialStats = {

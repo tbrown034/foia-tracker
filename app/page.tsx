@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/SiteShell";
 import { Sparkline } from "@/components/Sparkline";
+import { SlopeChart } from "@/components/SlopeChart";
 import { MetricsExplainer } from "@/components/MetricsExplainer";
 import { quarterlyMarkers } from "@/lib/admin-transitions";
 import {
@@ -8,6 +9,7 @@ import {
   getMostRecentQuarter,
   getHomeCallouts,
   getWallOfShame,
+  getSlopeChartData,
 } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -38,11 +40,12 @@ function sparkColor(pct: number | null): string {
 }
 
 export default async function Home() {
-  const [rows, period, callouts, wall] = await Promise.all([
+  const [rows, period, callouts, wall, slope] = await Promise.all([
     getQuarterlyRanking(25),
     getMostRecentQuarter(),
     getHomeCallouts(),
     getWallOfShame(5),
+    getSlopeChartData(),
   ]);
   const periodLabel = period ? `FY${period.fy} Q${period.q}` : "—";
   const prevQ = period
@@ -135,7 +138,42 @@ export default async function Home() {
           </div>
         </div>
 
-        <MetricsExplainer className="mt-8" />
+        {/* Killer graphic: slope chart pre-Trump-2 vs. now */}
+        <section className="mt-12">
+          <div className="text-xs uppercase tracking-wide text-stone-500">
+            Headline view · slope chart
+          </div>
+          <h2 className="font-display text-3xl text-stone-900 mt-1">
+            Where federal FOIA backlogs went after January 2025
+          </h2>
+          <p className="text-stone-600 mt-2 max-w-2xl">
+            Each line is one agency. Left dot = backlog at the close of{" "}
+            {slope.baselineLabel} — the last full quarter before the Trump 2.0
+            inauguration. Right dot = backlog at the close of{" "}
+            {slope.currentLabel}, the most recent published quarter. Top
+            movers are highlighted; smaller agencies dimmed for context.
+            Hover any line for the agency name and exact numbers.
+          </p>
+          <div className="mt-6 border border-stone-200 rounded-lg p-6 bg-white overflow-x-auto">
+            <SlopeChart data={slope} width={980} height={620} highlightTop={12} />
+          </div>
+          <div className="mt-3 flex justify-between items-center text-xs text-stone-500">
+            <span>
+              Backlogged = perfected requests open more than 20 working days,
+              per agency self-reporting. Log scale on the y-axis to keep both
+              tiny and giant agencies visible.
+            </span>
+            <a
+              href="/api/data/slope.csv"
+              className="underline hover:text-stone-900 whitespace-nowrap"
+              download
+            >
+              Download data (CSV)
+            </a>
+          </div>
+        </section>
+
+        <MetricsExplainer className="mt-12" />
 
         <div className="mt-8 border border-stone-200 rounded-lg overflow-hidden">
           <table className="w-full">
@@ -213,14 +251,23 @@ export default async function Home() {
           </table>
         </div>
 
-        <div className="mt-4 flex justify-between text-xs text-stone-500">
+        <div className="mt-4 flex justify-between items-center flex-wrap gap-3 text-xs text-stone-500">
           <span>
             Source: FOIA.gov Quarterly Report API. &ldquo;All agencies&rdquo;
             meta-row excluded. Trend covers up to 8 most recent quarters.
           </span>
-          <Link href="/annual" className="underline hover:text-stone-700">
-            See 17-year annual history →
-          </Link>
+          <span className="flex items-center gap-4">
+            <a
+              href="/api/data/quarterly.csv"
+              className="underline hover:text-stone-900"
+              download
+            >
+              Download quarterly CSV
+            </a>
+            <Link href="/annual" className="underline hover:text-stone-900">
+              See 17-year annual history →
+            </Link>
+          </span>
         </div>
 
         {/* Wall of Shame teaser */}

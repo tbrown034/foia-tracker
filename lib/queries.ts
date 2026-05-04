@@ -282,6 +282,72 @@ export async function getHomeCallouts(): Promise<HomeCallouts> {
   };
 }
 
+// ---------- Slope chart: pre-Trump-2 vs. now ----------
+
+export type SlopePoint = {
+  agency: string;
+  slug: string;
+  baseline: number | null;
+  current: number | null;
+  delta_abs: number | null;
+  delta_pct: number | null;
+};
+
+export type SlopeChartData = {
+  baselineLabel: string;  // e.g. "FY2024 Q4" — last quarter fully before Jan 20, 2025
+  currentLabel: string;   // e.g. "FY2026 Q2" — most recent published
+  points: SlopePoint[];
+};
+
+export async function getSlopeChartData(): Promise<SlopeChartData> {
+  const recent = await getMostRecentQuarter();
+  const currentFy = recent?.fy ?? 2026;
+  const currentQ = recent?.q ?? 2;
+
+  // Baseline: FY2024 Q4 = Jul–Sep 2024, the last full quarter before Trump 2.
+  const baselineFy = 2024;
+  const baselineQ = 4;
+
+  const rows = (await sql`
+    WITH baseline AS (
+      SELECT agency, backlog::int AS backlog
+      FROM foia_quarterly
+      WHERE component = 'Agency Overall'
+        AND fiscal_year = ${baselineFy}
+        AND fiscal_quarter = ${baselineQ}
+        AND agency <> 'All agencies'
+    ),
+    current AS (
+      SELECT agency, backlog::int AS backlog
+      FROM foia_quarterly
+      WHERE component = 'Agency Overall'
+        AND fiscal_year = ${currentFy}
+        AND fiscal_quarter = ${currentQ}
+        AND agency <> 'All agencies'
+    )
+    SELECT
+      COALESCE(b.agency, c.agency) AS agency,
+      b.backlog AS baseline,
+      c.backlog AS current,
+      (c.backlog - b.backlog) AS delta_abs,
+      CASE
+        WHEN b.backlog > 0
+        THEN ROUND((c.backlog::numeric - b.backlog) / b.backlog * 100, 1)::float
+        ELSE NULL
+      END AS delta_pct
+    FROM baseline b
+    FULL OUTER JOIN current c USING (agency)
+    WHERE b.backlog IS NOT NULL OR c.backlog IS NOT NULL
+    ORDER BY GREATEST(COALESCE(b.backlog, 0), COALESCE(c.backlog, 0)) DESC
+  `) as Omit<SlopePoint, "slug">[];
+
+  return {
+    baselineLabel: `FY${baselineFy} Q${baselineQ}`,
+    currentLabel: `FY${currentFy} Q${currentQ}`,
+    points: rows.map((r) => ({ ...r, slug: slugify(r.agency) })),
+  };
+}
+
 // ---------- Wall of Shame teaser ----------
 
 export type WallOfShameRow = {

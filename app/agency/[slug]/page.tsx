@@ -413,6 +413,73 @@ export default async function AgencyPage({
           </div>
         </section>
 
+        {/* Raw data downloads */}
+        <section className="mt-12 border-t border-stone-200 pt-6">
+          <div className="text-xs uppercase tracking-wide text-stone-500">
+            Download raw data
+          </div>
+          <p className="text-sm text-stone-600 mt-2">
+            Every dataset behind this page is available as CSV. Filter by
+            agency name in your spreadsheet of choice.
+          </p>
+          <ul className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+            <li>
+              <a
+                href="/api/data/annual.csv"
+                className="text-stone-700 underline hover:text-stone-900"
+                download
+              >
+                Annual report headline (FY2008–FY2024)
+              </a>
+            </li>
+            <li>
+              <a
+                href="/api/data/quarterly.csv"
+                className="text-stone-700 underline hover:text-stone-900"
+                download
+              >
+                Quarterly reports
+              </a>
+            </li>
+            <li>
+              <a
+                href="/api/data/oldest-pending.csv"
+                className="text-stone-700 underline hover:text-stone-900"
+                download
+              >
+                Ten oldest pending requests
+              </a>
+            </li>
+            <li>
+              <a
+                href="/api/data/exemptions.csv"
+                className="text-stone-700 underline hover:text-stone-900"
+                download
+              >
+                Exemption invocations (b1–b9)
+              </a>
+            </li>
+            <li>
+              <a
+                href="/api/data/personnel.csv"
+                className="text-stone-700 underline hover:text-stone-900"
+                download
+              >
+                FOIA personnel
+              </a>
+            </li>
+            <li>
+              <a
+                href="/api/data/slope.csv"
+                className="text-stone-700 underline hover:text-stone-900"
+                download
+              >
+                Pre/post Trump 2.0 slope-chart data
+              </a>
+            </li>
+          </ul>
+        </section>
+
         <div className="mt-10 flex justify-between text-sm">
           {prev ? (
             <Link

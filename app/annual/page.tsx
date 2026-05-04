@@ -123,14 +123,23 @@ export default async function AnnualPage() {
           </table>
         </div>
 
-        <p className="mt-4 text-xs text-stone-500">
-          Source: FOIA.gov bulk Annual Report CSVs, FY2008–FY2024.
-          Agency-level totals only. &ldquo;All agencies&rdquo; meta-row
-          excluded. Vertical dashed lines mark presidential
-          inaugurations: Obama (Jan 2009), Trump (Jan 2017), Biden (Jan
-          2021). Trump&rsquo;s second inauguration (Jan 2025) lands in
-          FY2025 — shown on the quarterly view.
-        </p>
+        <div className="mt-4 flex justify-between items-start flex-wrap gap-3 text-xs text-stone-500">
+          <p className="max-w-3xl">
+            Source: FOIA.gov bulk Annual Report CSVs, FY2008–FY2024.
+            Agency-level totals only. &ldquo;All agencies&rdquo; meta-row
+            excluded. Vertical dashed lines mark presidential
+            inaugurations: Obama (Jan 2009), Trump (Jan 2017), Biden (Jan
+            2021). Trump&rsquo;s second inauguration (Jan 2025) lands in
+            FY2025 — shown on the quarterly view.
+          </p>
+          <a
+            href="/api/data/annual.csv"
+            className="underline hover:text-stone-900 whitespace-nowrap"
+            download
+          >
+            Download annual CSV
+          </a>
+        </div>
       </div>
     </SiteShell>
   );

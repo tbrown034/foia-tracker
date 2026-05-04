@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SiteShell } from "@/components/SiteShell";
 import { Sparkline } from "@/components/Sparkline";
 import { ExemptionBars } from "@/components/ExemptionBars";
+import { MetricsExplainer } from "@/components/MetricsExplainer";
 import { annualMarkers, quarterlyMarkers } from "@/lib/admin-transitions";
 import {
   getAgencyDetail,
@@ -181,6 +182,9 @@ export default async function AgencyPage({
             </p>
           </div>
         </section>
+
+        {/* Explainer between annual and quarterly */}
+        <MetricsExplainer variant="detailed" className="mt-10" />
 
         {/* Quarterly recent */}
         {quarterly.length > 0 && (

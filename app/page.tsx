@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/SiteShell";
 import { Sparkline } from "@/components/Sparkline";
+import { MetricsExplainer } from "@/components/MetricsExplainer";
 import { quarterlyMarkers } from "@/lib/admin-transitions";
 import {
   getQuarterlyRanking,
@@ -134,7 +135,9 @@ export default async function Home() {
           </div>
         </div>
 
-        <div className="mt-10 border border-stone-200 rounded-lg overflow-hidden">
+        <MetricsExplainer className="mt-8" />
+
+        <div className="mt-8 border border-stone-200 rounded-lg overflow-hidden">
           <table className="w-full">
             <thead className="bg-stone-50 border-b border-stone-200">
               <tr>

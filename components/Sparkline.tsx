@@ -1,5 +1,6 @@
 import { scaleLinear } from "d3-scale";
 import { line, curveMonotoneX } from "d3-shape";
+import type { SparklineMarker } from "@/lib/admin-transitions";
 
 export type SparklinePoint = {
   x: number;
@@ -14,6 +15,8 @@ type Props = {
   fill?: string;
   showEndDot?: boolean;
   ariaLabel?: string;
+  markers?: SparklineMarker[];
+  showMarkerLabels?: boolean;
 };
 
 export function Sparkline({
@@ -24,6 +27,8 @@ export function Sparkline({
   fill = "transparent",
   showEndDot = true,
   ariaLabel,
+  markers = [],
+  showMarkerLabels = false,
 }: Props) {
   const valid = data.filter((d): d is { x: number; y: number } => d.y != null);
   if (valid.length < 2) {
@@ -38,7 +43,7 @@ export function Sparkline({
   }
 
   const padX = 2;
-  const padY = 4;
+  const padY = showMarkerLabels ? 16 : 4;
   const xs = valid.map((d) => d.x);
   const ys = valid.map((d) => d.y);
   const xMin = Math.min(...xs);
@@ -61,10 +66,7 @@ export function Sparkline({
   const d = pathGen(valid) ?? "";
   const last = valid[valid.length - 1];
 
-  const areaGen = line<{ x: number; y: number }>()
-    .x((d) => x(d.x))
-    .y((d) => y(d.y))
-    .curve(curveMonotoneX);
+  const visibleMarkers = markers.filter((m) => m.x >= xMin && m.x <= xMax);
 
   return (
     <svg
@@ -74,9 +76,41 @@ export function Sparkline({
       role="img"
       aria-label={ariaLabel ?? "trend"}
     >
+      {/* Vertical admin-transition markers, drawn behind the trendline */}
+      {visibleMarkers.map((m, i) => {
+        const xPos = x(m.x);
+        const color = m.color ?? "#a8a29e";
+        return (
+          <g key={`marker-${i}`}>
+            <line
+              x1={xPos}
+              x2={xPos}
+              y1={padY * 0.5}
+              y2={height - padY * 0.5}
+              stroke={color}
+              strokeWidth={1}
+              strokeDasharray="2 2"
+              opacity={0.55}
+            />
+            {showMarkerLabels && m.label && (
+              <text
+                x={xPos}
+                y={12}
+                textAnchor="middle"
+                fontSize={10}
+                fill={color}
+                fontFamily="ui-monospace, monospace"
+              >
+                {m.label}
+              </text>
+            )}
+          </g>
+        );
+      })}
+
       {fill !== "transparent" && (
         <path
-          d={`${areaGen(valid)} L ${x(xMax)},${height - padY} L ${x(xMin)},${
+          d={`${pathGen(valid)} L ${x(xMax)},${height - padY} L ${x(xMin)},${
             height - padY
           } Z`}
           fill={fill}

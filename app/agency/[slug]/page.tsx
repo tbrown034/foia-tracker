@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SiteShell } from "@/components/SiteShell";
 import { Sparkline } from "@/components/Sparkline";
 import { ExemptionBars } from "@/components/ExemptionBars";
+import { annualMarkers, quarterlyMarkers } from "@/lib/admin-transitions";
 import {
   getAgencyDetail,
   getAllAgencySlugs,
@@ -159,9 +160,11 @@ export default async function AgencyPage({
             <Sparkline
               data={annualSeries}
               width={900}
-              height={180}
+              height={200}
               stroke="#1c1917"
               fill="#1c1917"
+              markers={annualMarkers()}
+              showMarkerLabels
               ariaLabel={`17-year annual backlog for ${detail.agency}`}
             />
             <div className="mt-3 grid grid-cols-3 md:grid-cols-9 gap-2 text-[10px] text-stone-500">
@@ -173,6 +176,9 @@ export default async function AgencyPage({
                   </div>
                 ))}
             </div>
+            <p className="text-[10px] text-stone-500 mt-3">
+              Dashed verticals mark presidential inaugurations.
+            </p>
           </div>
         </section>
 
@@ -197,6 +203,7 @@ export default async function AgencyPage({
                   height={60}
                   stroke="#dc2626"
                   fill="#dc2626"
+                  markers={quarterlyMarkers()}
                 />
                 <div className="font-mono text-sm text-stone-900 mt-2">
                   {fmt(latestQuarter.backlog)}
@@ -211,6 +218,7 @@ export default async function AgencyPage({
                   width={260}
                   height={60}
                   stroke="#57534e"
+                  markers={quarterlyMarkers()}
                 />
                 <div className="font-mono text-sm text-stone-900 mt-2">
                   {fmt(latestQuarter.received)}
@@ -225,6 +233,7 @@ export default async function AgencyPage({
                   width={260}
                   height={60}
                   stroke="#059669"
+                  markers={quarterlyMarkers()}
                 />
                 <div className="font-mono text-sm text-stone-900 mt-2">
                   {fmt(latestQuarter.processed)}

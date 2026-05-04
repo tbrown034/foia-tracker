@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/SiteShell";
 import { Sparkline } from "@/components/Sparkline";
+import { quarterlyMarkers } from "@/lib/admin-transitions";
 import {
   getQuarterlyRanking,
   getMostRecentQuarter,
@@ -193,6 +194,7 @@ export default async function Home() {
                       width={120}
                       height={28}
                       stroke={sparkColor(row.delta_pct)}
+                      markers={quarterlyMarkers()}
                       ariaLabel={`Backlog trend for ${row.agency}`}
                     />
                   </td>

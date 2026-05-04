@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/SiteShell";
 import { Sparkline } from "@/components/Sparkline";
+import { annualMarkers } from "@/lib/admin-transitions";
 import { getAnnualRanking } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -112,6 +113,7 @@ export default async function AnnualPage() {
                       width={150}
                       height={32}
                       stroke={sparkColor(row.delta_pct)}
+                      markers={annualMarkers()}
                       ariaLabel={`17-year backlog trend for ${row.agency}`}
                     />
                   </td>
@@ -124,7 +126,10 @@ export default async function AnnualPage() {
         <p className="mt-4 text-xs text-stone-500">
           Source: FOIA.gov bulk Annual Report CSVs, FY2008–FY2024.
           Agency-level totals only. &ldquo;All agencies&rdquo; meta-row
-          excluded.
+          excluded. Vertical dashed lines mark presidential
+          inaugurations: Obama (Jan 2009), Trump (Jan 2017), Biden (Jan
+          2021). Trump&rsquo;s second inauguration (Jan 2025) lands in
+          FY2025 — shown on the quarterly view.
         </p>
       </div>
     </SiteShell>

@@ -111,28 +111,28 @@ export default async function Home() {
 
   return (
     <SiteShell>
-      <article className="mx-auto max-w-3xl w-full px-6 py-12">
+      <article className="mx-auto max-w-3xl w-full px-6 pt-14 pb-12">
         {/* Kicker */}
         <p className="font-display italic text-stone-500 text-sm">
-          Where federal records requests go to die · {stats.current_label}
+          Federal records requests · five quarters · {stats.baseline_label}–
+          {stats.current_label}
         </p>
 
-        {/* Headline */}
+        {/* Headline — neutral, descriptive */}
         <h1 className="font-display text-stone-900 text-5xl md:text-7xl leading-[0.95] mt-3">
-          The Trump 2.0 backlog
+          The federal FOIA backlog
         </h1>
 
-        {/* Standfirst */}
-        <p className="font-display text-stone-800 text-xl md:text-2xl leading-snug mt-6 max-w-2xl">
-          Federal FOIA backlogs grew by{" "}
-          <span className="text-red-700">
-            {fmtSigned(stats.total_change)}
-          </span>{" "}
-          requests in the fifteen months after Donald Trump&rsquo;s second
-          inauguration.{" "}
+        {/* Hero stat woven into the standfirst */}
+        <p className="font-display text-stone-900 text-xl md:text-2xl leading-snug mt-7 max-w-2xl">
+          As of the close of {stats.current_label}, federal agencies are
+          holding{" "}
+          <span className="tabular-nums">{fmt(stats.total_current)}</span>{" "}
+          unanswered FOIA requests — up from{" "}
+          <span className="tabular-nums">{fmt(stats.total_baseline)}</span>{" "}
+          five quarters earlier.{" "}
           <span className="tabular-nums">
-            {stats.agencies_falling_behind ?? "—"} of the top{" "}
-            {stats.top_n}
+            {stats.agencies_falling_behind ?? "—"} of the top {stats.top_n}
           </span>{" "}
           agencies closed fewer requests than they received during that
           window. The oldest pending request in the federal government has
@@ -140,49 +140,28 @@ export default async function Home() {
           <span className="tabular-nums">{overallOldestYears} years</span>.
         </p>
 
-        {/* Article timestamp */}
-        <p className="text-xs italic text-stone-500 mt-6">
-          Updated {updatedAt}.
+        {/* Lede / dateline */}
+        <p className="font-display text-stone-700 text-base italic mt-5 max-w-2xl leading-relaxed">
+          The numbers are self-reported by agencies under the FOIA Improvement
+          Act of 2016. They include perfected requests still open at quarter
+          end and exclude administrative appeals. Updated {updatedAt}.
         </p>
-
-        {/* Hero number — total federal backlog */}
-        <section className="mt-12 pt-10 border-t border-stone-200">
-          <p className="font-display italic text-stone-500 text-sm">
-            Total federal FOIA backlog, end of {stats.current_label}
-          </p>
-          <p className="font-display text-stone-900 text-7xl md:text-8xl leading-none mt-3 tabular-nums">
-            {fmt(stats.total_current)}
-          </p>
-          <p className="font-display text-stone-700 text-lg leading-snug mt-5 max-w-prose">
-            Up from{" "}
-            <span className="tabular-nums">{fmt(stats.total_baseline)}</span>{" "}
-            at {stats.baseline_label}. The Department of Justice alone is
-            holding the longest unanswered request: filed{" "}
-            {fmtDate(stats.doj_oldest_date)}, still pending after{" "}
-            <span className="tabular-nums">{dojOldestYears} years</span>.
-          </p>
-          <p className="text-xs italic text-stone-500 mt-4">
-            Source: FOIA.gov Quarterly Report API. Retrieved May 4, 2026.
-            Agency-overall rows only; components excluded.
-          </p>
-        </section>
-
-        {/* Slope chart — break out of the narrow column */}
       </article>
 
       <section className="mx-auto max-w-5xl w-full px-6 mt-16">
         <p className="font-display italic text-stone-500 text-sm">
-          Slope chart · agencies by absolute change in backlog
+          Slope chart · top 20 agencies by absolute change in backlog
         </p>
         <h2 className="font-display text-stone-900 text-3xl md:text-4xl leading-tight mt-2">
-          Where backlogs went after January 2025
+          Five quarters of backlog change
         </h2>
         <p className="text-stone-700 mt-3 max-w-prose leading-relaxed">
           Each line is one of the top 20 agencies by absolute change. Left
           dot = backlog at the close of {slope.baselineLabel}, the last
-          full quarter before the Trump 2.0 inauguration. Right dot =
-          backlog at the close of {slope.currentLabel}. Slope tells you
-          what changed; the bars below tell you why.
+          full quarter of the Biden administration. Right dot = backlog at
+          the close of {slope.currentLabel}, the most recent published
+          quarter. Slope tells you what changed; the bars below tell you
+          why.
         </p>
         <div className="mt-8">
           <SlopeChart
@@ -251,16 +230,16 @@ export default async function Home() {
           <p className="text-stone-700 mt-3 max-w-prose leading-relaxed">
             A backlog grows when an agency takes in more requests than it
             closes. The bars below show the top 12 agencies by request
-            volume during the Trump 2.0 window: dark = received, green =
-            processed. The &ldquo;closed / received&rdquo; column is that
-            ratio — anything below 100% means the queue grew.
+            volume across the same five-quarter window: dark = received,
+            green = processed. The &ldquo;closed / received&rdquo; column
+            is that ratio — anything below 100% means the queue grew.
           </p>
           {worstThroughput && (
             <p className="font-display italic text-stone-700 text-base mt-3 max-w-prose">
               Of the {throughput.length} highest-volume agencies on the
               list, {fallingBehindCount} closed fewer requests than they
-              received. The worst was {worstThroughput.agency}, which
-              processed{" "}
+              received over the five quarters. The widest gap was at{" "}
+              {worstThroughput.agency}, which processed{" "}
               <span className="not-italic tabular-nums">
                 {Math.round(worstThroughput.catch_up_ratio * 100)}%
               </span>{" "}

@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# planning + agent operating docs (private until project is public-ready)
+# Public-facing docs should live in README.md or a future /public-docs/ directory.
+/docs/
+/CLAUDE.md
+/AGENTS.md
+/.claude/
+.env.local
+
+# Cached upstream data dumps. The ingest scripts re-download as needed —
+# nothing here belongs in git.
+/data/raw/

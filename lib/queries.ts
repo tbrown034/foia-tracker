@@ -8,6 +8,48 @@ export type FreshnessRow = {
   status: string | null;
 };
 
+export type DatasetCounts = {
+  annual: number;
+  quarterly: number;
+  oldest_pending: number;
+  exemptions: number;
+  personnel: number;
+};
+
+export async function getDatasetCounts(): Promise<DatasetCounts> {
+  const tables = [
+    "foia_annual",
+    "foia_quarterly",
+    "foia_oldest_pending",
+    "foia_exemptions",
+    "foia_personnel",
+  ] as const;
+  const counts: Record<string, number> = {};
+  for (const t of tables) {
+    const [r] = (await sql.query(`SELECT count(*)::int AS n FROM ${t}`)) as {
+      n: number;
+    }[];
+    counts[t] = r?.n ?? 0;
+  }
+  return {
+    annual: counts.foia_annual,
+    quarterly: counts.foia_quarterly,
+    oldest_pending: counts.foia_oldest_pending,
+    exemptions: counts.foia_exemptions,
+    personnel: counts.foia_personnel,
+  };
+}
+
+export async function getLatestSyncByEachSource(): Promise<FreshnessRow[]> {
+  const rows = (await sql`
+    SELECT DISTINCT ON (source) source, ended_at, records, status
+    FROM sync_log
+    WHERE status = 'ok'
+    ORDER BY source, started_at DESC
+  `) as FreshnessRow[];
+  return rows;
+}
+
 export async function getLatestSync(): Promise<FreshnessRow | null> {
   const rows = await sql`
     SELECT source, ended_at, records, status
@@ -346,6 +388,60 @@ export async function getSlopeChartData(): Promise<SlopeChartData> {
     currentLabel: `FY${currentFy} Q${currentQ}`,
     points: rows.map((r) => ({ ...r, slug: slugify(r.agency) })),
   };
+}
+
+// ---------- Throughput companion (received vs processed) ----------
+
+export type ThroughputRow = {
+  agency: string;
+  slug: string;
+  received: number;
+  processed: number;
+  net_gap: number;       // received - processed; positive = falling behind
+  catch_up_ratio: number; // processed / received; <1 means falling behind
+};
+
+/**
+ * Sums received and processed across the Trump-2.0 quarterly window
+ * (FY2025 Q1 through the most recent published quarter). Returns the
+ * gap and the catch-up ratio so the home page can show "why" backlogs
+ * moved, not just that they did.
+ */
+export async function getThroughputDuringTrump2(
+  limit: number = 12
+): Promise<ThroughputRow[]> {
+  const recent = await getMostRecentQuarter();
+  const fy = recent?.fy ?? 2026;
+  const q = recent?.q ?? 2;
+
+  const rows = (await sql`
+    SELECT
+      agency,
+      SUM(received)::int  AS received,
+      SUM(processed)::int AS processed
+    FROM foia_quarterly
+    WHERE component = 'Agency Overall'
+      AND agency <> 'All agencies'
+      AND received IS NOT NULL
+      AND processed IS NOT NULL
+      AND (
+        (fiscal_year = 2025) OR
+        (fiscal_year = ${fy} AND fiscal_quarter <= ${q})
+      )
+    GROUP BY agency
+    HAVING SUM(received) > 0
+    ORDER BY SUM(received) DESC
+    LIMIT ${limit}
+  `) as { agency: string; received: number; processed: number }[];
+
+  return rows.map((r) => ({
+    agency: r.agency,
+    slug: slugify(r.agency),
+    received: r.received,
+    processed: r.processed,
+    net_gap: r.received - r.processed,
+    catch_up_ratio: r.received > 0 ? r.processed / r.received : 0,
+  }));
 }
 
 // ---------- Wall of Shame teaser ----------

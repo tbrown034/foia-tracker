@@ -34,6 +34,12 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
               Annual
             </Link>
             <Link
+              href="/data"
+              className="text-stone-700 hover:text-stone-900"
+            >
+              Data
+            </Link>
+            <Link
               href="/about"
               className="text-stone-700 hover:text-stone-900"
             >

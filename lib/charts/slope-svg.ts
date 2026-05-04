@@ -5,11 +5,20 @@
 import { scaleLog } from "d3-scale";
 import type { SlopeChartData, SlopePoint } from "@/lib/queries";
 
+export type SlopeAnnotation = {
+  agency: string;
+  text: string;
+  /** Which endpoint to anchor to. Defaults to right (current period). */
+  side?: "left" | "right";
+};
+
 type Options = {
   width?: number;
   height?: number;
   /** How many agencies to include, sorted by absolute backlog change. */
   topN?: number;
+  /** Hand-placed annotations attached to specific agencies. */
+  annotations?: SlopeAnnotation[];
 };
 
 function fmt(n: number | null): string {
@@ -39,6 +48,7 @@ export function renderSlopeChartSvg(
   const width = opts.width ?? 980;
   const height = opts.height ?? 600;
   const topN = opts.topN ?? 20;
+  const annotations = opts.annotations ?? [];
 
   const allValid = data.points.filter(
     (p): p is SlopePoint & { baseline: number; current: number } =>
@@ -176,7 +186,7 @@ export function renderSlopeChartSvg(
         ? `${entry.agency.slice(0, 30)}…`
         : entry.agency;
     parts.push(
-      `<text x="${xLeft - 12}" y="${entry.y + 3}" text-anchor="end" font-size="11" fill="#1c1917" font-family="DM Sans, system-ui, sans-serif">${escapeXml(labelText)}<tspan fill="#78716c" font-family="ui-monospace, monospace" font-size="10">  ${escapeXml(entry.valueLabel)}</tspan></text>`
+      `<text x="${xLeft - 12}" y="${entry.y + 3}" text-anchor="end" font-size="11" fill="#1c1917" font-family="Source Serif 4, Georgia, serif">${escapeXml(labelText)}<tspan fill="#78716c" font-family="ui-monospace, monospace" font-size="10">  ${escapeXml(entry.valueLabel)}</tspan></text>`
     );
   }
 
@@ -184,6 +194,27 @@ export function renderSlopeChartSvg(
   for (const entry of rightAdjusted) {
     parts.push(
       `<text x="${xRight + 12}" y="${entry.y + 3}" text-anchor="start" font-size="11" font-family="ui-monospace, monospace" fill="#1c1917">${escapeXml(entry.valueLabel)}<tspan fill="${entry.color}" font-family="ui-monospace, monospace" font-size="10">  ${escapeXml(entry.deltaLabel)}</tspan></text>`
+    );
+  }
+
+  // Annotations: small italic stone text anchored next to a specific
+  // agency's endpoint, with a hairline connector. Used to surface
+  // specific reported context ("CDC's FOIA office was eliminated April
+  // 2025") directly on the chart.
+  for (const ann of annotations) {
+    const point = points.find((p) => p.agency === ann.agency);
+    if (!point) continue;
+    const side = ann.side ?? "right";
+    const value = side === "left" ? point.baseline : point.current;
+    const anchorX = side === "left" ? xLeft : xRight;
+    const anchorY = y(Math.max(value, 1));
+    // Place annotation text 8px outside the column, on a row offset by 18px
+    // below the dot to avoid colliding with the value label.
+    const textX = side === "left" ? anchorX - 8 : anchorX + 8;
+    const textY = anchorY + 22;
+    const anchor = side === "left" ? "end" : "start";
+    parts.push(
+      `<g><line x1="${anchorX}" y1="${anchorY + 4}" x2="${anchorX}" y2="${textY - 8}" stroke="#a8a29e" stroke-width="0.75" stroke-dasharray="2 2"/><text x="${textX}" y="${textY}" text-anchor="${anchor}" font-size="10" font-style="italic" font-family="Source Serif 4, Georgia, serif" fill="#57534e">${escapeXml(ann.text)}</text></g>`
     );
   }
 

@@ -92,6 +92,14 @@ export default async function Home() {
     : "—";
 
   const updatedAt = fmtUpdatedAt(new Date());
+
+  // Throughput-derived anecdote stats (no fabrication; all from the bars
+  // immediately below).
+  const fallingBehindCount = throughput.filter((t) => t.catch_up_ratio < 1)
+    .length;
+  const worstThroughput = [...throughput].sort(
+    (a, b) => a.catch_up_ratio - b.catch_up_ratio
+  )[0];
   const dojOldestYears =
     stats.doj_oldest_days != null
       ? (stats.doj_oldest_days / 365).toFixed(1)
@@ -177,7 +185,29 @@ export default async function Home() {
           what changed; the bars below tell you why.
         </p>
         <div className="mt-8">
-          <SlopeChart data={slope} width={980} height={620} topN={20} />
+          <SlopeChart
+            data={slope}
+            width={980}
+            height={620}
+            topN={20}
+            annotations={[
+              {
+                agency: "Department of Justice",
+                text: "FBI, ATF, DEA all report through DOJ",
+                side: "right",
+              },
+              {
+                agency: "Department of Health and Human Services",
+                text: "CDC FOIA office eliminated, April 2025",
+                side: "right",
+              },
+              {
+                agency: "Department of Transportation",
+                text: "Lost 10% of FOIA staff",
+                side: "right",
+              },
+            ]}
+          />
         </div>
         <p className="text-xs italic text-stone-500 mt-4 max-w-3xl">
           Source: FOIA.gov Quarterly Report API. Retrieved May 4, 2026.
@@ -200,6 +230,17 @@ export default async function Home() {
           </a>
         </p>
 
+        {/* Pull quote */}
+        <figure className="mt-12 mx-auto max-w-2xl border-l-2 border-stone-800 pl-6">
+          <blockquote className="font-display text-stone-900 text-2xl md:text-3xl leading-snug italic">
+            &ldquo;An unprecedented breakdown in the infrastructure
+            supporting public access to government information.&rdquo;
+          </blockquote>
+          <figcaption className="mt-4 text-sm text-stone-600 font-display not-italic [font-variant-caps:small-caps]">
+            American Oversight, congressional testimony, April 25, 2025
+          </figcaption>
+        </figure>
+
         <div className="mt-16">
           <p className="font-display italic text-stone-500 text-sm">
             Throughput · what drove the change
@@ -214,6 +255,18 @@ export default async function Home() {
             processed. The &ldquo;closed / received&rdquo; column is that
             ratio — anything below 100% means the queue grew.
           </p>
+          {worstThroughput && (
+            <p className="font-display italic text-stone-700 text-base mt-3 max-w-prose">
+              Of the {throughput.length} highest-volume agencies on the
+              list, {fallingBehindCount} closed fewer requests than they
+              received. The worst was {worstThroughput.agency}, which
+              processed{" "}
+              <span className="not-italic tabular-nums">
+                {Math.round(worstThroughput.catch_up_ratio * 100)}%
+              </span>{" "}
+              of what came in.
+            </p>
+          )}
           <div className="mt-8">
             <ThroughputPanel data={throughput} />
           </div>
@@ -399,6 +452,83 @@ export default async function Home() {
           </p>
         </section>
       )}
+
+      {/* Reading list */}
+      <section className="mx-auto max-w-3xl w-full px-6 mt-20 mb-16 border-t border-stone-200 pt-10">
+        <p className="font-display italic text-stone-500 text-sm">
+          Further reading
+        </p>
+        <h2 className="font-display text-stone-900 text-2xl md:text-3xl leading-tight mt-2">
+          The reporting underneath this dashboard
+        </h2>
+        <ul className="mt-6 space-y-5">
+          <li>
+            <a
+              href="https://americanoversight.org/american-oversight-urges-congress-to-protect-and-strengthen-foia-during-unprecedented-attacks-on-transparency/"
+              className="block group"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <p className="font-display text-stone-900 text-lg group-hover:underline">
+                American Oversight urges Congress to protect and strengthen
+                FOIA during unprecedented attacks on transparency
+              </p>
+              <p className="text-sm text-stone-600 mt-1">
+                American Oversight congressional testimony, April 25, 2025.
+                Names the structural breakdown — eliminated FOIA offices,
+                ephemeral-messaging evasion, exemption abuse — and lays out
+                concrete asks for Congress.
+              </p>
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://americanoversight.org/"
+              className="block group"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <p className="font-display text-stone-900 text-lg group-hover:underline">
+                Not All Federal Agencies Are Equal When It Comes to FOIA
+                Response Times
+              </p>
+              <p className="text-sm text-stone-600 mt-1">
+                American Oversight, February 2025. The agency-level
+                disparity argument that the Quarterly Report API makes
+                queryable in real time.
+              </p>
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://www.foia.gov/foia-dataset-download.html"
+              className="block group"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <p className="font-display text-stone-900 text-lg group-hover:underline">
+                FOIA.gov dataset downloads
+              </p>
+              <p className="text-sm text-stone-600 mt-1">
+                Department of Justice Office of Information Policy. The
+                source of every number on this page. Bulk Annual Report
+                ZIPs, FY2008 through FY2024.
+              </p>
+            </a>
+          </li>
+          <li>
+            <Link href="/data" className="block group">
+              <p className="font-display text-stone-900 text-lg group-hover:underline">
+                FOIA Tracker open data
+              </p>
+              <p className="text-sm text-stone-600 mt-1">
+                Six datasets behind this site, downloadable as CSV. Schema,
+                row counts, refresh cadence.
+              </p>
+            </Link>
+          </li>
+        </ul>
+      </section>
     </SiteShell>
   );
 }

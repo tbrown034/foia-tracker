@@ -390,6 +390,128 @@ export async function getSlopeChartData(): Promise<SlopeChartData> {
   };
 }
 
+// ---------- Editorial standfirst stats ----------
+
+export type EditorialStats = {
+  total_baseline: number | null;
+  total_current: number | null;
+  total_change: number | null;
+  agencies_falling_behind: number | null;
+  top_n: number;
+  doj_oldest_date: string | null;
+  doj_oldest_days: number | null;
+  oldest_overall_agency: string | null;
+  oldest_overall_days: number | null;
+  oldest_overall_date: string | null;
+  baseline_label: string;
+  current_label: string;
+};
+
+export async function getEditorialStats(topN: number = 25): Promise<EditorialStats> {
+  const recent = await getMostRecentQuarter();
+  const fy = recent?.fy ?? 2026;
+  const q = recent?.q ?? 2;
+
+  const baselineFy = 2024;
+  const baselineQ = 4;
+
+  // Total federal backlog at baseline and current
+  const totals = (await sql`
+    SELECT
+      SUM(CASE WHEN fiscal_year = ${baselineFy} AND fiscal_quarter = ${baselineQ} THEN backlog END)::int AS baseline,
+      SUM(CASE WHEN fiscal_year = ${fy} AND fiscal_quarter = ${q} THEN backlog END)::int AS current
+    FROM foia_quarterly
+    WHERE component = 'Agency Overall'
+      AND agency <> 'All agencies'
+      AND backlog IS NOT NULL
+      AND (
+        (fiscal_year = ${baselineFy} AND fiscal_quarter = ${baselineQ})
+        OR (fiscal_year = ${fy} AND fiscal_quarter = ${q})
+      )
+  `) as { baseline: number | null; current: number | null }[];
+
+  // Count of top-N (by backlog at current) agencies whose received > processed
+  // across the Trump-2.0 window.
+  const fallingBehind = (await sql`
+    WITH window_totals AS (
+      SELECT
+        agency,
+        SUM(received) AS received,
+        SUM(processed) AS processed
+      FROM foia_quarterly
+      WHERE component = 'Agency Overall'
+        AND agency <> 'All agencies'
+        AND received IS NOT NULL AND processed IS NOT NULL
+        AND (
+          fiscal_year = 2025 OR
+          (fiscal_year = ${fy} AND fiscal_quarter <= ${q})
+        )
+      GROUP BY agency
+    ),
+    current_top AS (
+      SELECT agency
+      FROM foia_quarterly
+      WHERE component = 'Agency Overall'
+        AND agency <> 'All agencies'
+        AND fiscal_year = ${fy} AND fiscal_quarter = ${q}
+        AND backlog IS NOT NULL
+      ORDER BY backlog DESC NULLS LAST
+      LIMIT ${topN}
+    )
+    SELECT count(*)::int AS n
+    FROM window_totals w
+    JOIN current_top t USING (agency)
+    WHERE w.received > w.processed
+  `) as { n: number }[];
+
+  // DOJ's oldest pending request (FY2024 reporting)
+  const doj = (await sql`
+    SELECT date_received::text AS date_received, days_pending::int AS days_pending
+    FROM foia_oldest_pending
+    WHERE agency = 'Department of Justice'
+      AND component = 'Agency Overall'
+      AND fiscal_year = (
+        SELECT MAX(fiscal_year) FROM foia_oldest_pending
+        WHERE agency = 'Department of Justice' AND component = 'Agency Overall'
+      )
+      AND days_pending IS NOT NULL
+    ORDER BY days_pending DESC
+    LIMIT 1
+  `) as { date_received: string | null; days_pending: number | null }[];
+
+  // Oldest pending request across the whole federal government (latest year)
+  const overall = (await sql`
+    SELECT agency, date_received::text AS date_received, days_pending::int AS days_pending
+    FROM foia_oldest_pending
+    WHERE component = 'Agency Overall'
+      AND agency <> 'All agencies'
+      AND fiscal_year = (
+        SELECT MAX(fiscal_year) FROM foia_oldest_pending WHERE component = 'Agency Overall'
+      )
+      AND days_pending IS NOT NULL
+    ORDER BY days_pending DESC
+    LIMIT 1
+  `) as { agency: string; date_received: string | null; days_pending: number | null }[];
+
+  return {
+    total_baseline: totals[0]?.baseline ?? null,
+    total_current: totals[0]?.current ?? null,
+    total_change:
+      totals[0]?.baseline != null && totals[0]?.current != null
+        ? totals[0].current - totals[0].baseline
+        : null,
+    agencies_falling_behind: fallingBehind[0]?.n ?? null,
+    top_n: topN,
+    doj_oldest_date: doj[0]?.date_received ?? null,
+    doj_oldest_days: doj[0]?.days_pending ?? null,
+    oldest_overall_agency: overall[0]?.agency ?? null,
+    oldest_overall_days: overall[0]?.days_pending ?? null,
+    oldest_overall_date: overall[0]?.date_received ?? null,
+    baseline_label: `FY${baselineFy} Q${baselineQ}`,
+    current_label: `FY${fy} Q${q}`,
+  };
+}
+
 // ---------- Throughput companion (received vs processed) ----------
 
 export type ThroughputRow = {

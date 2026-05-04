@@ -193,9 +193,9 @@ export default async function Home() {
               A backlog grows when an agency takes in more requests than it
               closes. The bars below show the top 12 agencies by request
               volume during the Trump 2.0 window: dark = requests received,
-              green = requests processed. The catch-up ratio on the right
-              is the share of incoming requests the agency closed. Anything
-              under 100% means the queue grew.
+              green = requests processed. The &ldquo;closed / received&rdquo;
+              column on the right is exactly that ratio — anything under
+              100% means the queue grew.
             </p>
             <div className="mt-6">
               <ThroughputPanel data={throughput} />

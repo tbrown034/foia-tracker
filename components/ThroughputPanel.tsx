@@ -37,7 +37,7 @@ export function ThroughputPanel({ data }: Props) {
               Received vs. processed during Trump 2.0
             </th>
             <th className="text-right text-xs font-semibold uppercase tracking-wide text-stone-600 pb-2">
-              Catch-up
+              Closed / received
             </th>
           </tr>
         </thead>
@@ -103,10 +103,11 @@ export function ThroughputPanel({ data }: Props) {
         </tbody>
       </table>
       <p className="text-xs text-stone-500 mt-4 max-w-3xl">
-        <strong>Catch-up ratio = processed ÷ received</strong> across FY2025
-        Q1 through the most recent quarter. Below 100% means the agency is
-        falling behind — backlog grows. Above 100% means it&rsquo;s closing
-        old requests faster than new ones arrive.
+        <strong>Closed / received = processed ÷ received</strong> across
+        FY2025 Q1 through the most recent quarter. 100% means the agency
+        closed exactly as many as it received. Below 100% means the queue
+        grew. Above 100% means it&rsquo;s closing old requests faster than
+        new ones arrive.
       </p>
     </div>
   );

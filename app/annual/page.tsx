@@ -38,15 +38,17 @@ export default async function AnnualPage() {
     <SiteShell>
       <div className="mx-auto max-w-5xl w-full px-6 py-10">
         <div className="mb-2 text-xs uppercase tracking-wide text-stone-500">
-          Annual report · 17-year window, FY2008–FY2024
+          Annual report · 17-year window, FY2008–FY2024 (Oct 1, 2007 – Sept 30, 2024)
         </div>
         <h1 className="font-display text-4xl text-stone-900">
           Annual backlogs and the long view
         </h1>
         <p className="text-stone-600 mt-2 max-w-2xl">
-          Top 50 federal agencies by pending FOIA requests at end of FY2024,
-          with the 17-year trend per agency. FY2025 annual report not yet
-          published as of May 2026 — the current quarterly view at{" "}
+          Top 50 federal agencies by pending FOIA requests at end of FY2024
+          (Sept 30, 2024), with the 17-year trend per agency. Federal fiscal
+          year runs Oct 1 – Sept 30, named for the year it ends. FY2025
+          annual report (Oct 1, 2024 – Sept 30, 2025) not yet published as
+          of May 2026 — the current quarterly view at{" "}
           <Link href="/" className="underline">
             the home page
           </Link>{" "}
@@ -125,12 +127,13 @@ export default async function AnnualPage() {
 
         <div className="mt-4 flex justify-between items-start flex-wrap gap-3 text-xs text-stone-500">
           <p className="max-w-3xl">
-            Source: FOIA.gov bulk Annual Report CSVs, FY2008–FY2024.
-            Agency-level totals only. &ldquo;All agencies&rdquo; meta-row
-            excluded. Vertical dashed lines mark presidential
-            inaugurations: Obama (Jan 2009), Trump (Jan 2017), Biden (Jan
-            2021). Trump&rsquo;s second inauguration (Jan 2025) lands in
-            FY2025 — shown on the quarterly view.
+            Source: FOIA.gov bulk Annual Report CSVs, FY2008–FY2024
+            (Oct 1, 2007 – Sept 30, 2024). Agency-level totals only.
+            &ldquo;All agencies&rdquo; meta-row excluded. Vertical dashed
+            lines mark presidential inaugurations: Obama (Jan 20, 2009),
+            Trump 1 (Jan 20, 2017), Biden (Jan 20, 2021). Trump&rsquo;s
+            second inauguration (Jan 20, 2025) lands in FY2025 — shown on
+            the quarterly view.
           </p>
           <a
             href="/api/data/annual.csv"

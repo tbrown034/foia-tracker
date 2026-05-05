@@ -6,6 +6,11 @@ import { ExemptionBars } from "@/components/ExemptionBars";
 import { MetricsExplainer } from "@/components/MetricsExplainer";
 import { annualMarkers, quarterlyMarkers } from "@/lib/admin-transitions";
 import {
+  fiscalQuarterLabel,
+  fiscalYearDateRange,
+  type FiscalQuarter,
+} from "@/lib/fiscal";
+import {
   getAgencyDetail,
   getAllAgencySlugs,
   getAgencyOldestPending,
@@ -18,10 +23,6 @@ export const dynamic = "force-dynamic";
 function fmt(n: number | null): string {
   if (n == null) return "—";
   return n.toLocaleString();
-}
-
-function quarterLabel(fy: number, q: number): string {
-  return `FY${fy} Q${q}`;
 }
 
 export async function generateMetadata({
@@ -110,7 +111,7 @@ export default async function AgencyPage({
             </div>
             <div className="text-xs text-stone-500 mt-1">
               {latestQuarter
-                ? `End of ${quarterLabel(latestQuarter.fiscal_year, latestQuarter.fiscal_quarter)}`
+                ? `End of ${fiscalQuarterLabel(latestQuarter.fiscal_year, latestQuarter.fiscal_quarter as FiscalQuarter)}`
                 : "Not in quarterly reporting"}
             </div>
           </div>
@@ -122,7 +123,9 @@ export default async function AgencyPage({
               {fmt(latestAnnual?.pending_end ?? null)}
             </div>
             <div className="text-xs text-stone-500 mt-1">
-              End of FY{latestAnnual?.fiscal_year ?? "—"} pending
+              {latestAnnual
+                ? `End of FY${latestAnnual.fiscal_year} (Sept 30, ${latestAnnual.fiscal_year})`
+                : "End of FY—"}
             </div>
           </div>
           <div className="border border-stone-200 rounded-lg p-5">
@@ -143,7 +146,9 @@ export default async function AgencyPage({
                 : `${annualWindowChange > 0 ? "+" : ""}${annualWindowChange.toFixed(0)}%`}
             </div>
             <div className="text-xs text-stone-500 mt-1">
-              FY{firstAnnual?.fiscal_year ?? "—"} → FY{latestAnnual?.fiscal_year ?? "—"}
+              {firstAnnual && latestAnnual
+                ? `FY${firstAnnual.fiscal_year} → FY${latestAnnual.fiscal_year} (Oct 1, ${firstAnnual.fiscal_year - 1} – Sept 30, ${latestAnnual.fiscal_year})`
+                : "FY— → FY—"}
             </div>
           </div>
         </div>
@@ -155,7 +160,12 @@ export default async function AgencyPage({
             {latestAnnual?.fiscal_year ?? "—"}
           </h2>
           <p className="text-sm text-stone-600 mt-1">
-            Pending requests at end of each fiscal year.
+            Pending requests at end of each fiscal year
+            {firstAnnual && latestAnnual
+              ? ` (Oct 1, ${firstAnnual.fiscal_year - 1} – Sept 30, ${latestAnnual.fiscal_year})`
+              : ""}
+            . Federal fiscal year runs Oct 1 – Sept 30, named for the year
+            it ends.
           </p>
           <div className="mt-4 border border-stone-200 rounded-lg p-6 bg-white fluid-svg">
             <Sparkline
@@ -194,7 +204,7 @@ export default async function AgencyPage({
             </h2>
             <p className="text-sm text-stone-600 mt-1">
               Last {quarterly.length} quarters of received, processed, and
-              backlog. Most recent: {quarterLabel(latestQuarter.fiscal_year, latestQuarter.fiscal_quarter)}.
+              backlog. Most recent: {fiscalQuarterLabel(latestQuarter.fiscal_year, latestQuarter.fiscal_quarter as FiscalQuarter)}.
             </p>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="border border-stone-200 rounded-lg p-5">
@@ -251,7 +261,7 @@ export default async function AgencyPage({
         {oldestPending.length > 0 && (
           <section className="mt-10">
             <h2 className="font-display text-2xl text-stone-900">
-              Ten oldest pending requests, end of FY2024
+              10 oldest pending requests, end of FY2024 (Sept 30, 2024)
             </h2>
             <p className="text-sm text-stone-600 mt-1">
               Days pending counts forward from the day the request was
@@ -310,7 +320,7 @@ export default async function AgencyPage({
         {exemptions.length > 0 && (
           <section className="mt-10">
             <h2 className="font-display text-2xl text-stone-900">
-              Exemption invocations, FY2024
+              Exemption invocations, FY2024 (Oct 1, 2023 – Sept 30, 2024)
             </h2>
             <p className="text-sm text-stone-600 mt-1">
               How often each FOIA exemption (b1–b9) was invoked when
@@ -328,7 +338,7 @@ export default async function AgencyPage({
         {latestPersonnel && (
           <section className="mt-10">
             <h2 className="font-display text-2xl text-stone-900">
-              FOIA staffing, FY{latestPersonnel.fiscal_year}
+              FOIA staffing, FY{latestPersonnel.fiscal_year} ({fiscalYearDateRange(latestPersonnel.fiscal_year)})
             </h2>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="border border-stone-200 rounded-lg p-5">
@@ -447,7 +457,7 @@ export default async function AgencyPage({
                 className="text-stone-700 underline hover:text-stone-900"
                 download
               >
-                Ten oldest pending requests
+                10 oldest pending requests
               </a>
             </li>
             <li>
@@ -474,7 +484,7 @@ export default async function AgencyPage({
                 className="text-stone-700 underline hover:text-stone-900"
                 download
               >
-                Pre/post Trump 2.0 slope-chart data
+                Pre/post Trump slope-chart data
               </a>
             </li>
           </ul>

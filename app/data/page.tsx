@@ -3,7 +3,13 @@ import { SiteShell } from "@/components/SiteShell";
 import {
   getDatasetCounts,
   getLatestSyncByEachSource,
+  getMostRecentQuarter,
 } from "@/lib/queries";
+import {
+  fiscalQuarterDateRange,
+  fiscalQuarterShort,
+  type FiscalQuarter,
+} from "@/lib/fiscal";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +53,7 @@ const DATASETS: Dataset[] = [
     key: "quarterly",
     name: "Quarterly report",
     description:
-      "Per agency, per fiscal-year quarter: received, processed, backlogged. The freshest series — most recent published is FY2026 Q2 (data through March 31, 2026).",
+      "Per agency, per fiscal-year quarter: received, processed, backlogged. The freshest series.",
     source: "FOIA.gov Quarterly Report JSON:API",
     columns: [
       "agency",
@@ -63,9 +69,9 @@ const DATASETS: Dataset[] = [
   },
   {
     key: "oldest-pending",
-    name: "Ten oldest pending requests",
+    name: "10 oldest pending requests",
     description:
-      "Per agency, per fiscal year: the ten oldest unanswered requests still open at year-end, with their original filing dates and days pending. Litigation-priority data.",
+      "Per agency, per fiscal year: the 10 oldest unanswered requests still open at year-end, with their original filing dates and days pending. Litigation-priority data.",
     source: "FOIA.gov bulk Annual Report ZIPs",
     columns: [
       "agency",
@@ -113,9 +119,9 @@ const DATASETS: Dataset[] = [
   },
   {
     key: "slope",
-    name: "Slope chart — pre/post Trump 2.0",
+    name: "Slope chart — pre/post Trump",
     description:
-      "Pre-computed snapshot for the home-page slope chart: each agency's quarterly backlog at FY2024 Q4 (the last full quarter before Jan 20, 2025) versus the most recent published quarter, with absolute and percentage change.",
+      "Pre-computed snapshot for the home-page slope chart: each agency's quarterly backlog at FY2025 Q1 (Oct 1 – Dec 31, 2024, the last full quarter before Trump's Jan. 20, 2025 inauguration) versus the most recent published quarter, with absolute and percentage change.",
     source: "Derived from quarterly report data",
     columns: [
       "agency",
@@ -141,14 +147,24 @@ function fmtTime(iso: string | null): string {
 }
 
 export default async function DataPage() {
-  const [counts, syncs] = await Promise.all([
+  const [counts, syncs, latestQuarter] = await Promise.all([
     getDatasetCounts(),
     getLatestSyncByEachSource(),
+    getMostRecentQuarter(),
   ]);
 
   const syncBySource = new Map(syncs.map((s) => [s.source, s]));
   const bulkSync = syncBySource.get("bulk-csv");
   const quarterlySync = syncBySource.get("quarterly-api");
+  const latestQuarterLabel = latestQuarter
+    ? `${fiscalQuarterShort(
+        latestQuarter.fy,
+        latestQuarter.q as FiscalQuarter
+      )} (${fiscalQuarterDateRange(
+        latestQuarter.fy,
+        latestQuarter.q as FiscalQuarter
+      )})`
+    : "unknown";
 
   return (
     <SiteShell>
@@ -189,7 +205,7 @@ export default async function DataPage() {
             </div>
             <div className="text-sm text-stone-500 mt-1">
               {quarterlySync?.records?.toLocaleString() ?? "—"} rows
-              ingested. Latest quarter: FY2026 Q2.
+              ingested. Latest quarter: {latestQuarterLabel}.
             </div>
           </div>
         </section>
@@ -209,7 +225,12 @@ export default async function DataPage() {
                   {counts[d.countKey]?.toLocaleString() ?? "—"} rows
                 </div>
               </div>
-              <p className="text-stone-700 mt-2">{d.description}</p>
+              <p className="text-stone-700 mt-2">
+                {d.description}
+                {d.key === "quarterly"
+                  ? ` Most recent in the database: ${latestQuarterLabel}.`
+                  : ""}
+              </p>
               <div className="text-xs text-stone-500 mt-3">
                 Source: {d.source}
               </div>

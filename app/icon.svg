@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Redacted document favicon: page silhouette with corner fold and redaction bars -->
+  <!-- Page body -->
+  <path d="M6 3 H21.5 L26 7.5 V28 C26 28.5523 25.5523 29 25 29 H7 C6.4477 29 6 28.5523 6 28 V4 C6 3.4477 6.4477 3 7 3 Z" fill="#fafaf9" stroke="#1c1917" stroke-width="1.75" stroke-linejoin="round"/>
+  <!-- Corner fold -->
+  <path d="M21.5 3 V7.5 H26" stroke="#1c1917" stroke-width="1.75" stroke-linejoin="round" fill="none"/>
+  <!-- Redaction bars -->
+  <rect x="9" y="11" width="14" height="2.25" fill="#1c1917"/>
+  <rect x="9" y="15.5" width="10" height="2.25" fill="#1c1917"/>
+  <rect x="9" y="20" width="14" height="2.25" fill="#1c1917"/>
+  <rect x="9" y="24.5" width="7" height="2.25" fill="#1c1917"/>
+</svg>

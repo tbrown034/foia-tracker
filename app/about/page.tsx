@@ -1,5 +1,14 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/SiteShell";
+import {
+  fiscalQuarterDateRange,
+  fiscalQuarterShort,
+  fiscalYearDateRange,
+  type FiscalQuarter,
+} from "@/lib/fiscal";
+import { getSiteFreshness } from "@/lib/queries";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "About — FOIA Tracker",
@@ -7,7 +16,26 @@ export const metadata = {
     "Methodology, data sources, freshness, and caveats for FOIA Tracker.",
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const freshness = await getSiteFreshness();
+  const annualLabel = freshness.annual_fy
+    ? `FY${freshness.annual_fy} (${fiscalYearDateRange(freshness.annual_fy)})`
+    : "unknown";
+  const quarterlyLabel =
+    freshness.quarterly_fy && freshness.quarterly_q
+      ? `${fiscalQuarterShort(
+          freshness.quarterly_fy,
+          freshness.quarterly_q as FiscalQuarter
+        )} (${fiscalQuarterDateRange(
+          freshness.quarterly_fy,
+          freshness.quarterly_q as FiscalQuarter
+        )})`
+      : "unknown";
+  const fy2025AnnualStatus =
+    freshness.annual_fy != null && freshness.annual_fy >= 2025
+      ? "present in the current database."
+      : "not yet published in the current database. The Department of Justice Office of Information Policy is running late this year. We poll daily.";
+
   return (
     <SiteShell>
       <div className="mx-auto max-w-3xl w-full px-6 py-10">
@@ -24,10 +52,10 @@ export default function AboutPage() {
           <h2 className="font-display text-2xl text-stone-900">What this is</h2>
           <p className="text-stone-700 mt-3">
             Federal FOIA backlogs are exploding. DoD&rsquo;s backlog grew 42%
-            to more than 30,000 pending requests by end of FY25. State
-            Department&rsquo;s backlog grew from roughly 21,000 to 27,619 in
-            one fiscal year. CDC&rsquo;s entire FOIA office was eliminated in
-            April 2025. OPM lost all of its FOIA staff.
+            to more than 30,000 pending requests by end of FY2025 (Sept 30,
+            2025). State Department&rsquo;s backlog grew from roughly 21,000
+            to 27,619 in one fiscal year. CDC&rsquo;s entire FOIA office was
+            eliminated in April 2025. OPM lost all of its FOIA staff.
           </p>
           <p className="text-stone-700 mt-3">
             American Oversight has done the analysis. Their February 2025
@@ -46,11 +74,56 @@ export default function AboutPage() {
         </section>
 
         <section className="mt-10">
+          <h2 className="font-display text-2xl text-stone-900">
+            How federal fiscal years work
+          </h2>
+          <p className="text-stone-700 mt-3">
+            Every FY label on this site is the US federal fiscal year, which
+            runs Oct 1 through Sept 30 and is named for the year it ends.
+            FY2024 = Oct 1, 2023 – Sept 30, 2024. FY2026 = Oct 1, 2025 –
+            Sept 30, 2026.
+          </p>
+          <p className="text-stone-700 mt-3">
+            Federal quarters split the year as follows:
+          </p>
+          <ul className="mt-2 space-y-1 text-stone-700 font-mono text-sm">
+            <li>Q1 = Oct 1 – Dec 31 (in the prior calendar year)</li>
+            <li>Q2 = Jan 1 – Mar 31</li>
+            <li>Q3 = Apr 1 – Jun 30</li>
+            <li>Q4 = Jul 1 – Sep 30</li>
+          </ul>
+          <p className="text-stone-700 mt-3">
+            Presidential inaugurations always fall in Q2 (Jan 20), so any FY
+            that contains an inauguration is a transition year split between
+            two administrations. The clean fiscal years for each
+            administration in our data window:
+          </p>
+          <ul className="mt-2 space-y-1 text-stone-700 text-sm">
+            <li>
+              <strong>Trump 1:</strong> FY2018, FY2019, FY2020 (Oct 1, 2017 –
+              Sept 30, 2020)
+            </li>
+            <li>
+              <strong>Biden:</strong> FY2022, FY2023, FY2024 (Oct 1, 2021 –
+              Sept 30, 2024)
+            </li>
+            <li>
+              <strong>Trump 2:</strong> FY2026 so far (Oct 1, 2025 – present),
+              quarterly only — no annual published yet
+            </li>
+            <li className="text-stone-500">
+              FY2017, FY2021, FY2025 are transition years; we footnote them
+              rather than attributing to one administration.
+            </li>
+          </ul>
+        </section>
+
+        <section className="mt-10">
           <h2 className="font-display text-2xl text-stone-900">Data sources</h2>
           <ul className="mt-3 space-y-3 text-stone-700">
             <li>
-              <strong>Annual Report bulk CSVs</strong> — FY2008 through FY2024,
-              downloaded from{" "}
+              <strong>Annual Report bulk CSVs</strong> — FY2008 through FY2024
+              (Oct 1, 2007 – Sept 30, 2024), downloaded from{" "}
               <a
                 href="https://www.foia.gov/foia-dataset-download.html"
                 className="underline hover:text-stone-900"
@@ -63,35 +136,142 @@ export default function AboutPage() {
             <li>
               <strong>Quarterly FOIA Report API</strong> —{" "}
               <code className="text-xs">api.foia.gov/api/quarterly_foia_report</code>{" "}
-              JSON:API endpoint. Most recent: FY2026 Q2 (data through March 31,
-              2026). Authenticated via api.data.gov key.
+              JSON:API endpoint. Most recent in the database: {quarterlyLabel}.
+              Authenticated via api.data.gov key.
             </li>
             <li>
               <strong>Agency Components API</strong> —{" "}
               <code className="text-xs">api.foia.gov/api/agency_components</code>
               . Used for canonical agency naming.
             </li>
+            <li>
+              <strong>Annual report XML</strong> — per-agency, per-year NIEM
+              XML from{" "}
+              <code className="text-xs">api.foia.gov/api/annual-report-xml</code>
+              . Reserved for deeper component-level drill-down; the MVP uses
+              bulk CSVs for historical seeding.
+            </li>
           </ul>
         </section>
 
-        <section className="mt-10">
+        <section id="freshness" className="mt-10 scroll-mt-24">
           <h2 className="font-display text-2xl text-stone-900">
             Freshness reality
           </h2>
           <ul className="mt-3 space-y-2 text-stone-700">
             <li>
-              <strong>Most recent annual:</strong> FY2024 (data through Sept
-              30, 2024; published April 2025; about 8 months stale).
+              <strong>Most recent annual:</strong> {annualLabel}.
             </li>
             <li>
-              <strong>Most recent quarterly:</strong> FY2026 Q2 (data through
-              March 31, 2026; about 5 weeks stale).
+              <strong>Most recent quarterly:</strong> {quarterlyLabel}.
             </li>
             <li>
-              <strong>FY2025 annual report:</strong> not yet published as of
-              May 2026. DOJ OIP appears late this year. We poll daily.
+              <strong>FY2025 annual report:</strong> Oct 1, 2024 –
+              Sept 30, 2025; {fy2025AnnualStatus}
             </li>
           </ul>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="font-display text-2xl text-stone-900">
+            Methodology
+          </h2>
+          <p className="text-stone-700 mt-3">
+            The quarterly home page ranks agency-overall rows by the most
+            recent published backlog, excluding the FOIA.gov &ldquo;All
+            agencies&rdquo; meta-row. Quarter-over-quarter changes compare
+            the same agency against the prior fiscal quarter when both rows
+            exist.
+          </p>
+          <p className="text-stone-700 mt-3">
+            The slope chart uses FY2025 Q1 (Oct 1 – Dec 31, 2024), the last
+            full quarter before the Jan. 20, 2025 inauguration, as the
+            baseline and compares it with the most recent published quarter.
+            Agencies missing either endpoint are treated as reporting gaps,
+            not inferred values.
+          </p>
+          <p className="text-stone-700 mt-3">
+            The 17-year annual view uses FY2008 through FY2024 bulk annual
+            CSVs. Quarterly &ldquo;backlog&rdquo; and annual
+            &ldquo;pending&rdquo; are intentionally kept on separate views
+            because FOIA.gov defines them differently.
+          </p>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="font-display text-2xl text-stone-900">
+            Agencies that stopped filing
+          </h2>
+          <p className="text-stone-700 mt-3">
+            27 federal agencies that had been reporting quarterly FOIA
+            data stopped doing so during the Trump administration. The
+            list, grouped by the last quarter each agency filed, with
+            their FY2024 average requests received per quarter where
+            available:
+          </p>
+          <h3 className="text-sm font-display [font-variant-caps:small-caps] tracking-wider text-stone-900 mt-5">
+            Last filed FY2025 Q3 (April–June 2025)
+          </h3>
+          <ul className="text-sm text-stone-700 mt-2 space-y-1">
+            <li>Department of Homeland Security (~225,168/q)</li>
+            <li>Office of Management and Budget (~248/q)</li>
+            <li>Council of the Inspectors General on Integrity and Efficiency (~52/q)</li>
+            <li>U.S. Agency for Global Media (~44/q)</li>
+          </ul>
+          <h3 className="text-sm font-display [font-variant-caps:small-caps] tracking-wider text-stone-900 mt-5">
+            Last filed FY2025 Q4 (July–September 2025)
+          </h3>
+          <ul className="text-sm text-stone-700 mt-2 space-y-1">
+            <li>Department of Veterans Affairs (~23,774/q)</li>
+            <li>Small Business Administration (~1,318/q)</li>
+            <li>General Services Administration (~387/q)</li>
+            <li>National Railroad Passenger Corporation (~187/q)</li>
+            <li>Office of the United States Trade Representative (~34/q)</li>
+            <li>Office of National Drug Control Policy (~23/q)</li>
+            <li>United States Trade and Development Agency (~20/q)</li>
+            <li>Millennium Challenge Corporation (~18/q)</li>
+            <li>Office of the Intellectual Property Enforcement Coordinator (~11/q)</li>
+            <li>National Capital Planning Commission (~9/q)</li>
+            <li>Office of Science and Technology Policy (~54/q)</li>
+          </ul>
+          <h3 className="text-sm font-display [font-variant-caps:small-caps] tracking-wider text-stone-900 mt-5">
+            Last filed FY2026 Q1 (October–December 2025)
+          </h3>
+          <ul className="text-sm text-stone-700 mt-2 space-y-1">
+            <li>U.S. Department of State (~5,473/q)</li>
+            <li>Department of Agriculture (~4,242/q)</li>
+            <li>Consumer Financial Protection Bureau (~244/q)</li>
+            <li>Office of Personnel Management (~242/q)</li>
+            <li>Consumer Product Safety Commission (~196/q)</li>
+            <li>Council on Environmental Quality (~105/q)</li>
+            <li>Office of the Director of National Intelligence (~103/q)</li>
+            <li>Office of Special Counsel (~61/q)</li>
+            <li>Institute of Museum and Library Services (~52/q)</li>
+            <li>Federal Energy Regulatory Commission (~33/q)</li>
+            <li>Inter-American Foundation (~13/q)</li>
+            <li>United States Access Board (~10/q)</li>
+          </ul>
+          <p className="text-stone-700 mt-5 leading-relaxed">
+            Outside reporting from{" "}
+            <a
+              href="https://notus.org/trump-white-house/trump-administration-dismantling-foia"
+              className="underline hover:text-stone-900"
+              target="_blank"
+              rel="noreferrer"
+            >
+              NOTUS
+            </a>
+            , Federal News Network, and Poynter has confirmed a broader
+            collapse in agency FOIA program staffing — the entire
+            public-records team at OPM was fired in February 2025; CDC&rsquo;s
+            FOIA office was eliminated in April 2025; the Department of
+            Education has lost more than half of its full-time FOIA staff;
+            HUD has lost 40% of its FOIA staff; the Defense Technical
+            Information Center&rsquo;s FOIA staff has been reduced to zero.
+            DHS, OMB, and HHS had not filed their FY2025 annual FOIA
+            reports as of late April 2026, weeks past the March 1 statutory
+            deadline.
+          </p>
         </section>
 
         <section className="mt-10">
@@ -107,6 +287,10 @@ export default function AboutPage() {
               closed&rdquo; without disposition.
             </li>
             <li>
+              Exemption counts are invocations, not unique requests. A single
+              response can invoke multiple exemptions.
+            </li>
+            <li>
               Component naming is inconsistent across years (USCIS vs.
               &ldquo;U.S. Citizenship and Immigration Services&rdquo;, etc.).
               We surface agency-overall totals in v1; component drill-down is
@@ -119,6 +303,11 @@ export default function AboutPage() {
             </li>
             <li>
               Intelligence community agencies report less detail by statute.
+            </li>
+            <li>
+              Annual report schema variance across years means some field
+              names move between FOIA.gov source versions. We map those at
+              ingest time.
             </li>
             <li>
               DOJ retroactively revises prior years. We re-pull bulk CSVs

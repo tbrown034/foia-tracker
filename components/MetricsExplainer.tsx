@@ -28,7 +28,7 @@ export function MetricsExplainer({
           </div>
           <ul className="mt-2 space-y-1.5 text-stone-700">
             <li>
-              <strong>Window:</strong> full fiscal year (Oct 1 — Sep 30).
+              <strong>Window:</strong> full fiscal year, Oct 1 through Sept 30.
             </li>
             <li>
               <strong>Coverage:</strong> every federal agency. ~122 agencies in
@@ -54,11 +54,13 @@ export function MetricsExplainer({
           </div>
           <ul className="mt-2 space-y-1.5 text-stone-700">
             <li>
-              <strong>Window:</strong> three months. FY2026 Q2 = Jan–Mar 2026.
+              <strong>Window:</strong> three months. The latest quarter is
+              shown in the sitewide freshness banner.
             </li>
             <li>
-              <strong>Coverage:</strong> larger agencies only. ~95 file
-              quarterly. <strong>DHS does not.</strong>
+              <strong>Coverage:</strong> larger agencies only. About 95 filed
+              before the Trump 2 reporting cliff. DHS filed through FY2025 Q3,
+              then stopped.
             </li>
             <li>
               <strong>Detail:</strong> received, processed, backlogged. Three
@@ -70,8 +72,8 @@ export function MetricsExplainer({
               &ldquo;pending.&rdquo;
             </li>
             <li>
-              <strong>Freshness:</strong> ~5 weeks after quarter end. Latest
-              is FY2026 Q2.
+              <strong>Freshness:</strong> usually about five weeks after
+              quarter end.
             </li>
           </ul>
         </div>

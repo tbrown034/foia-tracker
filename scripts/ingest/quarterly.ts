@@ -15,16 +15,24 @@ if (!apiKey) {
 
 const sql = neon(dbUrl);
 
-const QUARTERS: { fy: number; q: number }[] = [
-  { fy: 2026, q: 2 },
-  { fy: 2026, q: 1 },
-  { fy: 2025, q: 4 },
-  { fy: 2025, q: 3 },
-  { fy: 2025, q: 2 },
-  { fy: 2025, q: 1 },
-  { fy: 2024, q: 4 },
-  { fy: 2024, q: 3 },
-];
+// Quarterly FOIA Report API coverage (verified 2026-05-04):
+// - FY2020 and earlier: empty
+// - FY2021 Q1 onward: full data
+// We pull from FY2021 Q1 (Oct 1 – Dec 31, 2020) — Trump 1's last quarter —
+// through the most recent published quarter, FY2026 Q2 (Jan 1 – Mar 31, 2026).
+// 22 quarters total. Spans Trump 1 tail, all of Biden, and Trump 2 so far.
+function buildQuarters(): { fy: number; q: number }[] {
+  const out: { fy: number; q: number }[] = [];
+  for (let fy = 2026; fy >= 2021; fy--) {
+    const maxQ = fy === 2026 ? 2 : 4;
+    for (let q = maxQ; q >= 1; q--) {
+      out.push({ fy, q });
+    }
+  }
+  return out;
+}
+
+const QUARTERS = buildQuarters();
 
 type Row = {
   agency: string;

@@ -8,6 +8,50 @@ export type FreshnessRow = {
   status: string | null;
 };
 
+export type SiteFreshness = {
+  annual_fy: number | null;
+  quarterly_fy: number | null;
+  quarterly_q: number | null;
+  latest_sync_at: string | null;
+};
+
+export async function getSiteFreshness(): Promise<SiteFreshness> {
+  const [annualRows, quarterlyRows, syncRows] = await Promise.all([
+    sql`
+      SELECT MAX(fiscal_year)::int AS fy
+      FROM foia_annual
+      WHERE component = 'Agency Overall'
+        AND agency <> 'All agencies'
+    `,
+    sql`
+      SELECT fiscal_year::int AS fy, fiscal_quarter::int AS q
+      FROM foia_quarterly
+      WHERE component = 'Agency Overall'
+        AND agency <> 'All agencies'
+      ORDER BY fiscal_year DESC, fiscal_quarter DESC
+      LIMIT 1
+    `,
+    sql`
+      SELECT MAX(ended_at)::text AS ended_at
+      FROM sync_log
+      WHERE status = 'ok'
+    `,
+  ]);
+
+  const annual = annualRows[0] as { fy: number | null } | undefined;
+  const quarterly = quarterlyRows[0] as
+    | { fy: number | null; q: number | null }
+    | undefined;
+  const sync = syncRows[0] as { ended_at: string | null } | undefined;
+
+  return {
+    annual_fy: annual?.fy ?? null,
+    quarterly_fy: quarterly?.fy ?? null,
+    quarterly_q: quarterly?.q ?? null,
+    latest_sync_at: sync?.ended_at ?? null,
+  };
+}
+
 export type DatasetCounts = {
   annual: number;
   quarterly: number;
@@ -220,6 +264,360 @@ export async function getQuarterlyRanking(limit: number = 25): Promise<Quarterly
     slug: slugify(r.agency),
     series: seriesByAgency.get(r.agency) ?? [],
   }));
+}
+
+// ---------- Received vs processed timeline (hero) ----------
+
+export type ReceivedProcessedPoint = {
+  fy: number;
+  q: number;
+  /** fy*4+q ordering index */
+  x: number;
+  /** "FY2026 Q2 (Jan 1 – Mar 31, 2026)" */
+  label: string;
+  received: number;
+  processed: number;
+  /** received - processed; positive = pile grew that quarter */
+  net: number;
+  /** Total pending backlog summed across the agency set at quarter end. */
+  total_backlog: number;
+};
+
+export type ReceivedProcessedTimeline = {
+  points: ReceivedProcessedPoint[];
+  /** Names of the agencies summed in this timeline (the stable top filers). */
+  agencies: string[];
+  /** Sum of all-quarter received across these agencies. */
+  total_received: number;
+  /** Sum of all-quarter processed across these agencies. */
+  total_processed: number;
+};
+
+/**
+ * The ten federal agencies with the largest FY2024 received volume that
+ * also filed in every one of the 22 quarters from FY2021 Q1 through the
+ * most recent quarter. Hardcoded list — the audit ranking is in
+ * `docs/data-findings-quarterly-dropout.md`. These ten cover roughly a
+ * third of federal FOIA volume by request count, but every one of them
+ * filed every quarter so the time series is unbroken — no false trend
+ * from agencies dropping in or out (DHS, VA, State and 24 others stopped
+ * filing under Trump 2 — see the dropout doc for the full list).
+ */
+const TOP_TEN_STABLE_FILERS = [
+  "Department of Justice",
+  "Department of Defense",
+  "Department of Health and Human Services",
+  "Department of Transportation",
+  "Equal Employment Opportunity Commission",
+  "Department of Labor",
+  "Securities and Exchange Commission",
+  "Department of the Interior",
+  "Environmental Protection Agency",
+  "Department of Education",
+];
+
+/**
+ * Top-10-stable-filer received vs. processed across every quarter the API
+ * exposes (FY2021 Q1 → most recent). The set is fixed across all quarters
+ * so the time series is genuinely apples-to-apples — agencies that
+ * stopped filing under Trump 2 (DHS, VA, etc.) are not in this set and
+ * therefore not silently dropping out mid-window.
+ */
+export async function getReceivedVsProcessedTimeline(): Promise<ReceivedProcessedTimeline> {
+  const recent = await getMostRecentQuarter();
+  if (!recent) {
+    return {
+      points: [],
+      agencies: TOP_TEN_STABLE_FILERS,
+      total_received: 0,
+      total_processed: 0,
+    };
+  }
+
+  const rows = (await sql`
+    SELECT
+      fiscal_year AS fy,
+      fiscal_quarter AS q,
+      SUM(received)::int  AS received,
+      SUM(processed)::int AS processed,
+      SUM(backlog)::int   AS total_backlog
+    FROM foia_quarterly
+    WHERE component = 'Agency Overall'
+      AND agency = ANY(${TOP_TEN_STABLE_FILERS})
+    GROUP BY fiscal_year, fiscal_quarter
+    ORDER BY fiscal_year, fiscal_quarter
+  `) as {
+    fy: number;
+    q: number;
+    received: number;
+    processed: number;
+    total_backlog: number;
+  }[];
+
+  const QUARTER_DATES: Record<number, string> = {
+    1: "Oct 1 – Dec 31",
+    2: "Jan 1 – Mar 31",
+    3: "Apr 1 – Jun 30",
+    4: "Jul 1 – Sep 30",
+  };
+  function pointLabel(fy: number, q: number): string {
+    const calYear = q === 1 ? fy - 1 : fy;
+    return `FY${fy} Q${q} (${QUARTER_DATES[q]}, ${calYear})`;
+  }
+
+  const points: ReceivedProcessedPoint[] = rows.map((r) => ({
+    fy: r.fy,
+    q: r.q,
+    x: r.fy * 4 + r.q,
+    label: pointLabel(r.fy, r.q),
+    received: r.received,
+    processed: r.processed,
+    net: r.received - r.processed,
+    total_backlog: r.total_backlog,
+  }));
+
+  return {
+    points,
+    agencies: TOP_TEN_STABLE_FILERS,
+    total_received: points.reduce((s, p) => s + p.received, 0),
+    total_processed: points.reduce((s, p) => s + p.processed, 0),
+  };
+}
+
+// ---------- Agencies-filing-per-quarter dropout chart ----------
+
+export type FilingDropout = {
+  agency: string;
+  /** "FY2025 Q3" — the last quarter this agency filed. */
+  last_quarter_label: string;
+  /** Their typical FY2024 received volume; null if they didn't file in FY2024. */
+  typical_received_fy2024: number | null;
+};
+
+export type FilingPoint = {
+  fy: number;
+  q: number;
+  x: number;
+  /** "FY2026 Q2 (Jan 1 – Mar 31, 2026)" */
+  label: string;
+  agency_count: number;
+  /** Agencies whose LAST quarter filed is this one — i.e. who dropped after. */
+  dropouts: FilingDropout[];
+};
+
+export type FilingTimeline = {
+  points: FilingPoint[];
+  /** Total dropout count between the peak filer count and the latest. */
+  total_dropouts: number;
+};
+
+/**
+ * Per-quarter count of agencies that filed a quarterly report, plus the
+ * specific agencies whose final filed quarter was that quarter (i.e.
+ * they dropped out after). Surfaces the Trump 2 reporting cliff
+ * documented in `docs/data-findings-quarterly-dropout.md`.
+ */
+export async function getAgenciesFilingPerQuarter(): Promise<FilingTimeline> {
+  const counts = (await sql`
+    SELECT fiscal_year fy, fiscal_quarter q, COUNT(*)::int n
+    FROM foia_quarterly
+    WHERE component = 'Agency Overall' AND agency <> 'All agencies'
+      AND received IS NOT NULL
+    GROUP BY fiscal_year, fiscal_quarter
+    ORDER BY fiscal_year, fiscal_quarter
+  `) as { fy: number; q: number; n: number }[];
+
+  // For every agency, find their LAST filed quarter.
+  const lastFiled = (await sql`
+    WITH last_x AS (
+      SELECT agency, MAX(fiscal_year * 4 + fiscal_quarter) AS x
+      FROM foia_quarterly
+      WHERE component = 'Agency Overall' AND agency <> 'All agencies'
+        AND received IS NOT NULL
+      GROUP BY agency
+    ),
+    fy24_avg AS (
+      SELECT agency, AVG(received)::int AS avg_received
+      FROM foia_quarterly
+      WHERE component = 'Agency Overall' AND fiscal_year = 2024
+      GROUP BY agency
+    )
+    SELECT lx.agency, lx.x AS last_x, fy.avg_received
+    FROM last_x lx
+    LEFT JOIN fy24_avg fy ON lx.agency = fy.agency
+  `) as { agency: string; last_x: number; avg_received: number | null }[];
+
+  // Group dropouts by their last-filed quarter, but EXCLUDE agencies whose
+  // last-filed quarter is the most recent one (they haven't dropped — that's
+  // just the current cutoff).
+  const maxX = Math.max(...counts.map((c) => c.fy * 4 + c.q));
+  const dropoutsByX = new Map<number, FilingDropout[]>();
+  for (const r of lastFiled) {
+    if (r.last_x >= maxX) continue;
+    const fy = Math.floor(r.last_x / 4);
+    const q = r.last_x - fy * 4;
+    const arr = dropoutsByX.get(r.last_x) ?? [];
+    arr.push({
+      agency: r.agency,
+      last_quarter_label: `FY${fy} Q${q}`,
+      typical_received_fy2024: r.avg_received,
+    });
+    dropoutsByX.set(r.last_x, arr);
+  }
+
+  // Sort dropouts within each quarter by typical volume desc.
+  for (const arr of dropoutsByX.values()) {
+    arr.sort(
+      (a, b) =>
+        (b.typical_received_fy2024 ?? 0) - (a.typical_received_fy2024 ?? 0)
+    );
+  }
+
+  const QUARTER_DATES: Record<number, string> = {
+    1: "Oct 1 – Dec 31",
+    2: "Jan 1 – Mar 31",
+    3: "Apr 1 – Jun 30",
+    4: "Jul 1 – Sep 30",
+  };
+  function pointLabel(fy: number, q: number): string {
+    const calYear = q === 1 ? fy - 1 : fy;
+    return `FY${fy} Q${q} (${QUARTER_DATES[q]}, ${calYear})`;
+  }
+
+  const points: FilingPoint[] = counts.map((c) => {
+    const x = c.fy * 4 + c.q;
+    return {
+      fy: c.fy,
+      q: c.q,
+      x,
+      label: pointLabel(c.fy, c.q),
+      agency_count: c.n,
+      dropouts: dropoutsByX.get(x) ?? [],
+    };
+  });
+
+  const peak = Math.max(...points.map((p) => p.agency_count));
+  const latest = points[points.length - 1]?.agency_count ?? peak;
+
+  return {
+    points,
+    total_dropouts: peak - latest,
+  };
+}
+
+// ---------- Quarterly small multiples (Figure 2) ----------
+
+export type SmallMultipleSeriesPoint = {
+  fy: number;
+  q: number;
+  /** fy*4+q ordering index for x-axis */
+  x: number;
+  /** "FY2026 Q2 (Jan 1 – Mar 31, 2026)" */
+  label: string;
+  backlog: number | null;
+  received: number | null;
+  processed: number | null;
+};
+
+export type SmallMultipleAgency = {
+  agency: string;
+  slug: string;
+  latest_backlog: number;
+  earliest_backlog: number | null;
+  /** Percent change from the first to the most recent quarter. */
+  pct_change: number | null;
+  series: SmallMultipleSeriesPoint[];
+};
+
+/**
+ * Top N agencies by current backlog with their full available quarterly
+ * series. The API exposes data from FY2021 Q1 onward; this returns every
+ * available quarter so the panel can show the full Biden → Trump 2 arc.
+ */
+export async function getQuarterlySmallMultiples(
+  limit: number = 10
+): Promise<SmallMultipleAgency[]> {
+  const recent = await getMostRecentQuarter();
+  if (!recent) return [];
+  const { fy: latestFy, q: latestQ } = recent;
+
+  const top = (await sql`
+    SELECT agency, backlog::int AS backlog
+    FROM foia_quarterly
+    WHERE component = 'Agency Overall'
+      AND fiscal_year = ${latestFy}
+      AND fiscal_quarter = ${latestQ}
+      AND agency <> 'All agencies'
+      AND backlog IS NOT NULL
+    ORDER BY backlog DESC
+    LIMIT ${limit}
+  `) as { agency: string; backlog: number }[];
+
+  if (top.length === 0) return [];
+
+  const agencies = top.map((r) => r.agency);
+  const seriesRows = (await sql`
+    SELECT
+      agency, fiscal_year, fiscal_quarter,
+      backlog::int AS backlog,
+      received::int AS received,
+      processed::int AS processed
+    FROM foia_quarterly
+    WHERE component = 'Agency Overall'
+      AND agency = ANY(${agencies})
+    ORDER BY agency, fiscal_year, fiscal_quarter
+  `) as {
+    agency: string;
+    fiscal_year: number;
+    fiscal_quarter: number;
+    backlog: number | null;
+    received: number | null;
+    processed: number | null;
+  }[];
+
+  const QUARTER_DATES: Record<number, string> = {
+    1: "Oct 1 – Dec 31",
+    2: "Jan 1 – Mar 31",
+    3: "Apr 1 – Jun 30",
+    4: "Jul 1 – Sep 30",
+  };
+  function pointLabel(fy: number, q: number): string {
+    const calYear = q === 1 ? fy - 1 : fy;
+    return `FY${fy} Q${q} (${QUARTER_DATES[q]}, ${calYear})`;
+  }
+
+  const seriesByAgency = new Map<string, SmallMultipleSeriesPoint[]>();
+  for (const row of seriesRows) {
+    const arr = seriesByAgency.get(row.agency) ?? [];
+    arr.push({
+      fy: row.fiscal_year,
+      q: row.fiscal_quarter,
+      x: row.fiscal_year * 4 + row.fiscal_quarter,
+      label: pointLabel(row.fiscal_year, row.fiscal_quarter),
+      backlog: row.backlog,
+      received: row.received,
+      processed: row.processed,
+    });
+    seriesByAgency.set(row.agency, arr);
+  }
+
+  return top.map((r) => {
+    const series = seriesByAgency.get(r.agency) ?? [];
+    const firstWithBacklog = series.find((p) => p.backlog != null);
+    const earliest = firstWithBacklog?.backlog ?? null;
+    const pct =
+      earliest != null && earliest > 0
+        ? ((r.backlog - earliest) / earliest) * 100
+        : null;
+    return {
+      agency: r.agency,
+      slug: slugify(r.agency),
+      latest_backlog: r.backlog,
+      earliest_backlog: earliest,
+      pct_change: pct,
+      series,
+    };
+  });
 }
 
 // ---------- Home callout cards ----------
@@ -555,6 +953,10 @@ export type EditorialStats = {
   total_baseline: number | null;
   total_current: number | null;
   total_change: number | null;
+  /** Agencies present in BOTH the baseline and current quarter, which
+   *  defines the comparable set the totals are summed over. DHS and other
+   *  non-quarterly filers are not included. */
+  compared_agency_count: number;
   agencies_falling_behind: number | null;
   top_n: number;
   doj_oldest_date: string | null;
@@ -576,20 +978,41 @@ export async function getEditorialStats(topN: number = 25): Promise<EditorialSta
   const baselineFy = 2025;
   const baselineQ = 1;
 
-  // Total federal backlog at baseline and current
+  // Total federal backlog at baseline and current — apples-to-apples by
+  // restricting to the intersection of agencies that reported BOTH the
+  // baseline and the current quarter. DHS (largest non-quarterly filer)
+  // never appears here; agencies that drop in or out across the window
+  // are excluded from both sides so the totals stay comparable.
   const totals = (await sql`
+    WITH baseline AS (
+      SELECT agency, backlog
+      FROM foia_quarterly
+      WHERE component = 'Agency Overall'
+        AND agency <> 'All agencies'
+        AND fiscal_year = ${baselineFy}
+        AND fiscal_quarter = ${baselineQ}
+        AND backlog IS NOT NULL
+    ),
+    current AS (
+      SELECT agency, backlog
+      FROM foia_quarterly
+      WHERE component = 'Agency Overall'
+        AND agency <> 'All agencies'
+        AND fiscal_year = ${fy}
+        AND fiscal_quarter = ${q}
+        AND backlog IS NOT NULL
+    )
     SELECT
-      SUM(CASE WHEN fiscal_year = ${baselineFy} AND fiscal_quarter = ${baselineQ} THEN backlog END)::int AS baseline,
-      SUM(CASE WHEN fiscal_year = ${fy} AND fiscal_quarter = ${q} THEN backlog END)::int AS current
-    FROM foia_quarterly
-    WHERE component = 'Agency Overall'
-      AND agency <> 'All agencies'
-      AND backlog IS NOT NULL
-      AND (
-        (fiscal_year = ${baselineFy} AND fiscal_quarter = ${baselineQ})
-        OR (fiscal_year = ${fy} AND fiscal_quarter = ${q})
-      )
-  `) as { baseline: number | null; current: number | null }[];
+      SUM(b.backlog)::int AS baseline,
+      SUM(c.backlog)::int AS current,
+      COUNT(*)::int AS agency_count
+    FROM baseline b
+    JOIN current c USING (agency)
+  `) as {
+    baseline: number | null;
+    current: number | null;
+    agency_count: number;
+  }[];
 
   // Count of top-N (by backlog at current) agencies whose received > processed
   // across the Trump-2.0 window.
@@ -661,6 +1084,7 @@ export async function getEditorialStats(topN: number = 25): Promise<EditorialSta
       totals[0]?.baseline != null && totals[0]?.current != null
         ? totals[0].current - totals[0].baseline
         : null,
+    compared_agency_count: totals[0]?.agency_count ?? 0,
     agencies_falling_behind: fallingBehind[0]?.n ?? null,
     top_n: topN,
     doj_oldest_date: doj[0]?.date_received ?? null,

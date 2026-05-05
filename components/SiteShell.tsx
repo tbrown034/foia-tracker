@@ -1,88 +1,111 @@
 import Link from "next/link";
+import {
+  fiscalQuarterDateRange,
+  fiscalQuarterShort,
+  type FiscalQuarter,
+} from "@/lib/fiscal";
+import { getSiteFreshness } from "@/lib/queries";
 
-const ISSUE_DATE = "May 4, 2026";
+const LINKS = [
+  { href: "/", label: "Quarterly" },
+  { href: "/annual", label: "Annual" },
+  { href: "/data", label: "Data" },
+  { href: "/about", label: "About" },
+];
 
-export function SiteShell({ children }: { children: React.ReactNode }) {
+function syncAgeDays(iso: string | null): number | null {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return null;
+  return Math.floor((Date.now() - t) / (1000 * 60 * 60 * 24));
+}
+
+function quarterEndLabel(fy: number | null, q: number | null): string | null {
+  if (!fy || !q) return null;
+  return fiscalQuarterDateRange(fy, q as FiscalQuarter).split(" – ").at(-1) ?? null;
+}
+
+export async function SiteShell({ children }: { children: React.ReactNode }) {
+  const freshness = await getSiteFreshness();
+  const quarterLabel =
+    freshness.quarterly_fy && freshness.quarterly_q
+      ? fiscalQuarterShort(
+          freshness.quarterly_fy,
+          freshness.quarterly_q as FiscalQuarter
+        )
+      : null;
+  const quarterEnd = quarterEndLabel(
+    freshness.quarterly_fy,
+    freshness.quarterly_q
+  );
+  const age = syncAgeDays(freshness.latest_sync_at);
+  const isStale = age != null && age > 60;
+
   return (
     <div className="flex flex-col flex-1">
       <div className="h-[3px] bg-stone-900" />
 
       <header className="border-b border-[--color-rule]">
-        <div className="mx-auto max-w-5xl px-6 pt-6 pb-3 flex items-baseline justify-between gap-6 flex-wrap">
-          <div>
-            <Link
-              href="/"
-              className="block font-display text-stone-900 text-3xl md:text-4xl leading-none tracking-tight"
-            >
-              FOIA Tracker
-            </Link>
-            <p className="font-display italic text-stone-600 text-xs mt-1.5">
-              Federal records-request data, queryable. Volume 1, {ISSUE_DATE}.
-            </p>
+        <nav className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between gap-6 flex-wrap">
+          <Link
+            href="/"
+            className="font-display text-stone-900 text-2xl md:text-3xl leading-none tracking-tight"
+            aria-label="FOIA Tracker home"
+          >
+            FOIA Tracker
+          </Link>
+          <div className="flex items-center gap-5 text-sm font-display text-stone-600">
+            {LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="hover:text-stone-900 transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
-          <p className="font-display italic text-stone-600 text-xs max-w-[24rem] text-right leading-snug">
-            Quarterly through March 31, 2026 · annual through Sept 30, 2024 ·
-            next quarterly report expected August 2026.
-          </p>
-        </div>
-        <div className="border-t border-[--color-rule]">
-          <div className="mx-auto max-w-5xl px-6">
-            <nav className="flex items-center gap-1 sm:gap-2 text-sm font-display -mx-3">
-              <Link
-                href="/"
-                className="text-stone-700 hover:text-stone-900 px-3 py-3"
-              >
-                Quarterly
-              </Link>
-              <span className="text-stone-300" aria-hidden="true">
-                ·
-              </span>
-              <Link
-                href="/annual"
-                className="text-stone-700 hover:text-stone-900 px-3 py-3"
-              >
-                Annual
-              </Link>
-              <span className="text-stone-300" aria-hidden="true">
-                ·
-              </span>
-              <Link
-                href="/data"
-                className="text-stone-700 hover:text-stone-900 px-3 py-3"
-              >
-                Data
-              </Link>
-              <span className="text-stone-300" aria-hidden="true">
-                ·
-              </span>
-              <Link
-                href="/about"
-                className="text-stone-700 hover:text-stone-900 px-3 py-3"
-              >
-                About
-              </Link>
-            </nav>
-          </div>
-        </div>
+          <Link
+            href="/about#freshness"
+            className={`rounded-sm border px-2.5 py-1 text-xs font-display italic tabular-nums ${
+              isStale
+                ? "border-stone-300 text-stone-600 bg-stone-50"
+                : "border-amber-300 text-stone-900 bg-amber-50"
+            }`}
+          >
+            {quarterEnd ? `Quarterly through ${quarterEnd}` : "Freshness unknown"}
+          </Link>
+        </nav>
       </header>
 
       <main className="flex-1">{children}</main>
 
       <footer className="border-t border-[--color-rule] mt-20">
-        <div className="mx-auto max-w-5xl px-6 py-8 text-xs text-stone-600 flex justify-between flex-wrap gap-3 font-display italic">
-          <span>
-            Built by Trevor Brown. Data: FOIA.gov public domain. Not affiliated
-            with American Oversight.
-          </span>
-          <span>
-            <Link href="/about" className="underline hover:text-stone-800">
-              Methodology
-            </Link>{" "}
-            ·{" "}
-            <Link href="/data" className="underline hover:text-stone-800">
-              Data downloads
-            </Link>
-          </span>
+        <div className="mx-auto max-w-5xl px-6 py-8 text-xs text-stone-600 font-display italic">
+          <div className="border border-[--color-rule] bg-[--color-paper-deep] px-4 py-3 text-stone-800">
+            <strong className="not-italic text-stone-900">Freshness:</strong>{" "}
+            Most recent annual:{" "}
+            {freshness.annual_fy ? `FY${freshness.annual_fy}` : "unknown"}.
+            Most recent quarterly: {quarterLabel ?? "unknown"}
+            {quarterEnd ? `, through ${quarterEnd}` : ""}. Source data is
+            self-reported by agencies and may be revised by DOJ.
+          </div>
+          <div className="mt-5 flex justify-between flex-wrap gap-3">
+            <span>
+              Built by Trevor Brown. Data: FOIA.gov public domain. American
+              Oversight February 2025 analysis cited for framing. Not
+              affiliated with American Oversight.
+            </span>
+            <span>
+              <Link href="/about" className="underline hover:text-stone-800">
+                Methodology
+              </Link>{" "}
+              ·{" "}
+              <Link href="/data" className="underline hover:text-stone-800">
+                Data downloads
+              </Link>
+            </span>
+          </div>
         </div>
       </footer>
     </div>

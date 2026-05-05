@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-source-serif), Georgia, "Times New Roman", serif;
-  --font-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --color-paper: #faf7ee;
   --color-paper-deep: #f4efe1;
@@ -18,24 +18,6 @@ body {
   background-image:
     radial-gradient(circle at 20% 30%, rgba(120, 100, 60, 0.04) 0, transparent 60%),
     radial-gradient(circle at 80% 70%, rgba(120, 100, 60, 0.03) 0, transparent 60%);
-}
-
-/* Drop cap for editorial prose. Apply via class="lede". */
-.lede::first-letter {
-  float: left;
-  font-family: var(--font-display);
-  font-size: 3.75rem;
-  line-height: 0.82;
-  padding: 0.35rem 0.55rem 0 0;
-  font-weight: 600;
-  color: var(--color-stone-900);
-}
-
-@media (min-width: 768px) {
-  .lede::first-letter {
-    font-size: 5.25rem;
-    padding: 0.4rem 0.7rem 0 0;
-  }
 }
 
 /* Make embedded chart SVGs scale fluidly with their container while

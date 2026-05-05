@@ -36,7 +36,9 @@ export function SlopeChartInteractive({
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [hover, setHover] = useState<SlopePoint | null>(null);
-  const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
+  const [pointer, setPointer] = useState<
+    { x: number; y: number; wrapperWidth: number } | null
+  >(null);
 
   const topN = expanded ? expandedTopN : defaultTopN;
 
@@ -88,9 +90,17 @@ export function SlopeChartInteractive({
   // hovering easier than the 2px visible line.
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const wrapper = e.currentTarget.getBoundingClientRect();
-    const localX = e.clientX - wrapper.left;
-    const localY = e.clientY - wrapper.top;
-    setPointer({ x: localX, y: localY });
+    // Pointer for the tooltip lives in CSS pixels (DOM space).
+    const cssX = e.clientX - wrapper.left;
+    const cssY = e.clientY - wrapper.top;
+    setPointer({ x: cssX, y: cssY, wrapperWidth: wrapper.width });
+
+    // The SVG scales to fill the wrapper; convert cursor to authored
+    // (viewBox) coordinates so the geometry maths stays consistent.
+    const sx = wrapper.width > 0 ? width / wrapper.width : 1;
+    const sy = wrapper.height > 0 ? height / wrapper.height : 1;
+    const localX = cssX * sx;
+    const localY = cssY * sy;
 
     // Find the agency whose diagonal passes closest to the cursor.
     const { xLeft, xRight } = geometry;
@@ -109,7 +119,9 @@ export function SlopeChartInteractive({
         best = { agency: p, distance };
       }
     }
-    if (best && best.distance < 18) {
+    // Hit threshold scales with the chart's vertical zoom so it stays
+    // generous on small screens.
+    if (best && best.distance < 24 * sy) {
       setHover(best.agency);
     } else {
       setHover(null);
@@ -147,17 +159,16 @@ export function SlopeChartInteractive({
   return (
     <div className="relative">
       <div
-        className="relative w-full overflow-x-auto"
+        className="relative w-full fluid-svg"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
         <div dangerouslySetInnerHTML={{ __html: baseSvg }} />
         {hover && overlayPath && (
           <svg
-            width={width}
-            height={height}
             viewBox={`0 0 ${width} ${height}`}
-            className="absolute inset-0 pointer-events-none"
+            preserveAspectRatio="none"
+            className="absolute inset-0 pointer-events-none w-full h-full"
           >
             {/* Trajectory polyline through every reported quarter */}
             <path
@@ -167,6 +178,7 @@ export function SlopeChartInteractive({
               fill="none"
               strokeLinejoin="round"
               strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
             />
             {overlayPath.points.map((p, i) => (
               <g key={i}>
@@ -177,6 +189,7 @@ export function SlopeChartInteractive({
                   fill="#dc2626"
                   stroke="#faf7ee"
                   strokeWidth={1.5}
+                  vectorEffect="non-scaling-stroke"
                 />
               </g>
             ))}
@@ -187,9 +200,12 @@ export function SlopeChartInteractive({
       {hover && pointer && (
         <div
           role="tooltip"
-          className="pointer-events-none absolute z-10 bg-stone-900 text-white rounded shadow-lg px-3 py-2.5 min-w-[240px]"
+          className="pointer-events-none absolute z-10 bg-stone-900 text-white rounded shadow-lg px-3 py-2.5 min-w-[240px] max-w-[calc(100vw-2rem)]"
           style={{
-            left: Math.min(pointer.x + 16, width - 260),
+            left: Math.max(
+              8,
+              Math.min(pointer.x + 16, pointer.wrapperWidth - 260)
+            ),
             top: Math.max(pointer.y - 12, 8),
           }}
         >

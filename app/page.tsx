@@ -287,8 +287,8 @@ export default async function Home() {
           Click any agency for its full history.
         </figcaption>
 
-        <div className="mt-4 border-t border-stone-900">
-          <table className="w-full">
+        <div className="mt-4 border-t border-stone-900 overflow-x-auto">
+          <table className="w-full min-w-[42rem]">
             <thead className="border-b border-[--color-rule]">
               <tr>
                 <th className="py-3 text-left font-display italic text-sm text-stone-700 w-12">
@@ -303,13 +303,13 @@ export default async function Home() {
                 <th className="py-3 text-right font-display italic text-sm text-stone-700">
                   vs. {prevQ}
                 </th>
-                <th className="py-3 text-left font-display italic text-sm text-stone-700 w-36 pl-4">
+                <th className="hidden sm:table-cell py-3 text-left font-display italic text-sm text-stone-700 w-36 pl-4">
                   Trend
                 </th>
-                <th className="py-3 text-right font-display italic text-sm text-stone-700">
+                <th className="hidden md:table-cell py-3 text-right font-display italic text-sm text-stone-700">
                   Received
                 </th>
-                <th className="py-3 text-right font-display italic text-sm text-stone-700">
+                <th className="hidden md:table-cell py-3 text-right font-display italic text-sm text-stone-700">
                   Processed
                 </th>
               </tr>
@@ -341,7 +341,7 @@ export default async function Home() {
                   >
                     {fmtDelta(row.delta_pct)}
                   </td>
-                  <td className="py-3 pl-4" style={{ color: sparkColor(row.delta_pct) }}>
+                  <td className="hidden sm:table-cell py-3 pl-4" style={{ color: sparkColor(row.delta_pct) }}>
                     <Sparkline
                       data={row.series}
                       width={120}
@@ -351,10 +351,10 @@ export default async function Home() {
                       ariaLabel={`Backlog trend for ${row.agency}`}
                     />
                   </td>
-                  <td className="py-3 text-right font-display text-sm text-stone-600 tabular-nums">
+                  <td className="hidden md:table-cell py-3 text-right font-display text-sm text-stone-600 tabular-nums">
                     {fmt(row.received_latest)}
                   </td>
-                  <td className="py-3 text-right font-display text-sm text-stone-600 tabular-nums">
+                  <td className="hidden md:table-cell py-3 text-right font-display text-sm text-stone-600 tabular-nums">
                     {fmt(row.processed_latest)}
                   </td>
                 </tr>

@@ -24,11 +24,29 @@ body {
 .lede::first-letter {
   float: left;
   font-family: var(--font-display);
-  font-size: 5.25rem;
+  font-size: 3.75rem;
   line-height: 0.82;
-  padding: 0.4rem 0.7rem 0 0;
+  padding: 0.35rem 0.55rem 0 0;
   font-weight: 600;
   color: var(--color-stone-900);
+}
+
+@media (min-width: 768px) {
+  .lede::first-letter {
+    font-size: 5.25rem;
+    padding: 0.4rem 0.7rem 0 0;
+  }
+}
+
+/* Make embedded chart SVGs scale fluidly with their container while
+   preserving the authored aspect ratio. The slope chart and others are
+   authored at width=980 / height=620, but should never force a
+   horizontal scrollbar on narrower viewports. */
+.fluid-svg svg {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  display: block;
 }
 
 /* Thin horizontal rules in print color. */

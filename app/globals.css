@@ -36,18 +36,6 @@ body {
   border-color: var(--color-rule);
 }
 
-/* Ornamental three-asterism, centered, used between major sections. */
-.asterism::before {
-  content: "⁂";
-  display: block;
-  text-align: center;
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  color: #a8a29e;
-  letter-spacing: 0.4em;
-  padding-left: 0.4em;
-}
-
 /* Figure framing — thin top + bottom rules around chart figures. */
 .figure-frame {
   border-top: 1px solid var(--color-rule);

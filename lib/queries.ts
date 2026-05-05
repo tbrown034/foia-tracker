@@ -326,6 +326,16 @@ export async function getHomeCallouts(): Promise<HomeCallouts> {
 
 // ---------- Slope chart: pre-Trump-2 vs. now ----------
 
+export type QuarterlyPoint = {
+  fy: number;
+  q: number;
+  /** Calendar-month label, e.g. "Oct–Dec 2024" */
+  label: string;
+  /** Decimal-year x for ordering */
+  x: number;
+  backlog: number | null;
+};
+
 export type SlopePoint = {
   agency: string;
   slug: string;
@@ -333,24 +343,53 @@ export type SlopePoint = {
   current: number | null;
   delta_abs: number | null;
   delta_pct: number | null;
+  /** Full per-quarter trajectory between baseline and current, inclusive. */
+  series: QuarterlyPoint[];
 };
 
 export type SlopeChartData = {
-  baselineLabel: string;  // e.g. "FY2024 Q4" — last quarter fully before Jan 20, 2025
-  currentLabel: string;   // e.g. "FY2026 Q2" — most recent published
+  /** Calendar-month label for the baseline period (e.g. "Oct–Dec 2024"). */
+  baselineLabel: string;
+  /** Calendar-month label for the current period (e.g. "Jan–Mar 2026"). */
+  currentLabel: string;
+  /** Federal-fiscal label for footnotes ("FY2025 Q1" etc.). */
+  baselineFiscal: string;
+  currentFiscal: string;
   points: SlopePoint[];
 };
+
+const QUARTER_MONTH_LABELS: Record<number, string> = {
+  1: "Oct–Dec",
+  2: "Jan–Mar",
+  3: "Apr–Jun",
+  4: "Jul–Sep",
+};
+
+function calendarLabel(fy: number, q: number): string {
+  // FY runs Oct 1 → Sep 30 (named after the year it ends in).
+  // Q1 = Oct-Dec of FY-1, Q2 = Jan-Mar of FY, Q3 = Apr-Jun of FY, Q4 = Jul-Sep of FY.
+  const calendarYear = q === 1 ? fy - 1 : fy;
+  return `${QUARTER_MONTH_LABELS[q]} ${calendarYear}`;
+}
+
+function quarterDecimalX(fy: number, q: number): number {
+  const calendarYear = q === 1 ? fy - 1 : fy;
+  const monthFraction = q === 1 ? 12 / 12 : ((q - 1) * 3) / 12;
+  return calendarYear + monthFraction;
+}
 
 export async function getSlopeChartData(): Promise<SlopeChartData> {
   const recent = await getMostRecentQuarter();
   const currentFy = recent?.fy ?? 2026;
   const currentQ = recent?.q ?? 2;
 
-  // Baseline: FY2024 Q4 = Jul–Sep 2024, the last full quarter before Trump 2.
-  const baselineFy = 2024;
-  const baselineQ = 4;
+  // Baseline: FY2025 Q1 = Oct–Dec 2024, the last full quarter before
+  // Trump's January 20, 2025 inauguration. (FY2024 Q4 = Jul–Sep 2024
+  // would also be Biden-era but is one quarter further back.)
+  const baselineFy = 2025;
+  const baselineQ = 1;
 
-  const rows = (await sql`
+  const summaryRows = (await sql`
     WITH baseline AS (
       SELECT agency, backlog::int AS backlog
       FROM foia_quarterly
@@ -381,12 +420,55 @@ export async function getSlopeChartData(): Promise<SlopeChartData> {
     FULL OUTER JOIN current c USING (agency)
     WHERE b.backlog IS NOT NULL OR c.backlog IS NOT NULL
     ORDER BY GREATEST(COALESCE(b.backlog, 0), COALESCE(c.backlog, 0)) DESC
-  `) as Omit<SlopePoint, "slug">[];
+  `) as {
+    agency: string;
+    baseline: number | null;
+    current: number | null;
+    delta_abs: number | null;
+    delta_pct: number | null;
+  }[];
+
+  const agencies = summaryRows.map((r) => r.agency);
+  const seriesRows = (await sql`
+    SELECT agency, fiscal_year, fiscal_quarter, backlog::int AS backlog
+    FROM foia_quarterly
+    WHERE component = 'Agency Overall'
+      AND agency = ANY(${agencies})
+      AND (fiscal_year > ${baselineFy} OR
+           (fiscal_year = ${baselineFy} AND fiscal_quarter >= ${baselineQ}))
+      AND (fiscal_year < ${currentFy} OR
+           (fiscal_year = ${currentFy} AND fiscal_quarter <= ${currentQ}))
+    ORDER BY agency, fiscal_year, fiscal_quarter
+  `) as {
+    agency: string;
+    fiscal_year: number;
+    fiscal_quarter: number;
+    backlog: number | null;
+  }[];
+
+  const seriesByAgency = new Map<string, QuarterlyPoint[]>();
+  for (const row of seriesRows) {
+    const arr = seriesByAgency.get(row.agency) ?? [];
+    arr.push({
+      fy: row.fiscal_year,
+      q: row.fiscal_quarter,
+      label: calendarLabel(row.fiscal_year, row.fiscal_quarter),
+      x: quarterDecimalX(row.fiscal_year, row.fiscal_quarter),
+      backlog: row.backlog,
+    });
+    seriesByAgency.set(row.agency, arr);
+  }
 
   return {
-    baselineLabel: `FY${baselineFy} Q${baselineQ}`,
-    currentLabel: `FY${currentFy} Q${currentQ}`,
-    points: rows.map((r) => ({ ...r, slug: slugify(r.agency) })),
+    baselineLabel: calendarLabel(baselineFy, baselineQ),
+    currentLabel: calendarLabel(currentFy, currentQ),
+    baselineFiscal: `FY${baselineFy} Q${baselineQ}`,
+    currentFiscal: `FY${currentFy} Q${currentQ}`,
+    points: summaryRows.map((r) => ({
+      ...r,
+      slug: slugify(r.agency),
+      series: seriesByAgency.get(r.agency) ?? [],
+    })),
   };
 }
 
@@ -489,8 +571,10 @@ export async function getEditorialStats(topN: number = 25): Promise<EditorialSta
   const fy = recent?.fy ?? 2026;
   const q = recent?.q ?? 2;
 
-  const baselineFy = 2024;
-  const baselineQ = 4;
+  // Baseline: FY2025 Q1 = Oct–Dec 2024, the last full quarter before the
+  // Trump 2.0 inauguration (Jan 20, 2025).
+  const baselineFy = 2025;
+  const baselineQ = 1;
 
   // Total federal backlog at baseline and current
   const totals = (await sql`
@@ -584,8 +668,8 @@ export async function getEditorialStats(topN: number = 25): Promise<EditorialSta
     oldest_overall_agency: overall[0]?.agency ?? null,
     oldest_overall_days: overall[0]?.days_pending ?? null,
     oldest_overall_date: overall[0]?.date_received ?? null,
-    baseline_label: `FY${baselineFy} Q${baselineQ}`,
-    current_label: `FY${fy} Q${q}`,
+    baseline_label: calendarLabel(baselineFy, baselineQ),
+    current_label: calendarLabel(fy, q),
   };
 }
 

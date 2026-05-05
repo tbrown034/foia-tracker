@@ -10,6 +10,13 @@ export type SlopeAnnotation = {
   text: string;
   /** Which endpoint to anchor to. Defaults to right (current period). */
   side?: "left" | "right";
+  /**
+   * Position along the line, 0 = baseline, 1 = current. If set, the
+   * annotation is placed AT that fraction along the agency's diagonal,
+   * with a small marker dot — the event is implied to have occurred at
+   * that moment in the period.
+   */
+  dateFraction?: number;
 };
 
 type Options = {
@@ -144,18 +151,18 @@ export function renderSlopeChartSvg(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Federal FOIA backlogs, ${escapeXml(data.baselineLabel)} versus ${escapeXml(data.currentLabel)}">`
   );
 
-  // Headers
+  // Column headers — calendar dates above, fiscal context below
   parts.push(
-    `<text x="${xLeft}" y="${padTop - 28}" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#57534e">${escapeXml(data.baselineLabel)}</text>`
+    `<text x="${xLeft}" y="${padTop - 30}" text-anchor="middle" font-size="13" font-family="Source Serif 4, Georgia, serif" font-weight="600" fill="#1c1917">${escapeXml(data.baselineLabel)}</text>`
   );
   parts.push(
-    `<text x="${xLeft}" y="${padTop - 12}" text-anchor="middle" font-size="11" fill="#78716c">last quarter before Jan 2025</text>`
+    `<text x="${xLeft}" y="${padTop - 14}" text-anchor="middle" font-size="11" font-style="italic" font-family="Source Serif 4, Georgia, serif" fill="#57534e">${escapeXml(data.baselineFiscal)} · last quarter before Jan 2025</text>`
   );
   parts.push(
-    `<text x="${xRight}" y="${padTop - 28}" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#57534e">${escapeXml(data.currentLabel)}</text>`
+    `<text x="${xRight}" y="${padTop - 30}" text-anchor="middle" font-size="13" font-family="Source Serif 4, Georgia, serif" font-weight="600" fill="#1c1917">${escapeXml(data.currentLabel)}</text>`
   );
   parts.push(
-    `<text x="${xRight}" y="${padTop - 12}" text-anchor="middle" font-size="11" fill="#78716c">most recent published</text>`
+    `<text x="${xRight}" y="${padTop - 14}" text-anchor="middle" font-size="11" font-style="italic" font-family="Source Serif 4, Georgia, serif" fill="#57534e">${escapeXml(data.currentFiscal)} · most recent published</text>`
   );
 
   // Axis lines
@@ -197,25 +204,43 @@ export function renderSlopeChartSvg(
     );
   }
 
-  // Annotations: small italic stone text anchored next to a specific
-  // agency's endpoint, with a hairline connector. Used to surface
-  // specific reported context ("CDC's FOIA office was eliminated April
-  // 2025") directly on the chart.
+  // Annotations: anchor either to a specific endpoint or to a
+  // date-fraction along the agency's diagonal. Time-anchored annotations
+  // sit ON the line at the moment the event occurred ("CDC FOIA office
+  // eliminated, April 2025" lands ~28% of the way through the period).
   for (const ann of annotations) {
     const point = points.find((p) => p.agency === ann.agency);
     if (!point) continue;
-    const side = ann.side ?? "right";
-    const value = side === "left" ? point.baseline : point.current;
-    const anchorX = side === "left" ? xLeft : xRight;
-    const anchorY = y(Math.max(value, 1));
-    // Place annotation text 8px outside the column, on a row offset by 18px
-    // below the dot to avoid colliding with the value label.
-    const textX = side === "left" ? anchorX - 8 : anchorX + 8;
-    const textY = anchorY + 22;
-    const anchor = side === "left" ? "end" : "start";
-    parts.push(
-      `<g><line x1="${anchorX}" y1="${anchorY + 4}" x2="${anchorX}" y2="${textY - 8}" stroke="#a8a29e" stroke-width="0.75" stroke-dasharray="2 2"/><text x="${textX}" y="${textY}" text-anchor="${anchor}" font-size="10" font-style="italic" font-family="Source Serif 4, Georgia, serif" fill="#57534e">${escapeXml(ann.text)}</text></g>`
-    );
+
+    if (ann.dateFraction != null) {
+      // Place ON the diagonal at the given fraction.
+      const t = Math.max(0, Math.min(1, ann.dateFraction));
+      const yL = y(Math.max(point.baseline, 1));
+      const yR = y(Math.max(point.current, 1));
+      const px = xLeft + t * (xRight - xLeft);
+      const py = yL + t * (yR - yL);
+      // Text label above the line, with a short tick.
+      const labelY = py - 10;
+      parts.push(
+        `<g>` +
+          `<circle cx="${px}" cy="${py}" r="4" fill="#1c1917" stroke="#faf7ee" stroke-width="2"/>` +
+          `<line x1="${px}" y1="${py - 5}" x2="${px}" y2="${labelY - 2}" stroke="#1c1917" stroke-width="1"/>` +
+          `<text x="${px}" y="${labelY - 4}" text-anchor="middle" font-size="11" font-style="italic" font-family="Source Serif 4, Georgia, serif" fill="#1c1917">${escapeXml(ann.text)}</text>` +
+          `</g>`
+      );
+    } else {
+      // Endpoint annotation (existing behavior).
+      const side = ann.side ?? "right";
+      const value = side === "left" ? point.baseline : point.current;
+      const anchorX = side === "left" ? xLeft : xRight;
+      const anchorY = y(Math.max(value, 1));
+      const textX = side === "left" ? anchorX - 8 : anchorX + 8;
+      const textY = anchorY + 22;
+      const anchor = side === "left" ? "end" : "start";
+      parts.push(
+        `<g><line x1="${anchorX}" y1="${anchorY + 4}" x2="${anchorX}" y2="${textY - 8}" stroke="#a8a29e" stroke-width="0.75" stroke-dasharray="2 2"/><text x="${textX}" y="${textY}" text-anchor="${anchor}" font-size="10" font-style="italic" font-family="Source Serif 4, Georgia, serif" fill="#57534e">${escapeXml(ann.text)}</text></g>`
+      );
+    }
   }
 
   // Legend

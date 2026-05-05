@@ -63,32 +63,32 @@ export function ThroughputPanel({ data }: Props) {
                   </Link>
                 </td>
                 <td className="py-3 pr-4">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-12 text-[10px] font-mono text-stone-500 text-right">
-                        rcvd
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-20 font-display italic text-stone-600 text-xs text-right">
+                        Received
                       </div>
                       <div className="flex-1 h-3 bg-[--color-paper-deep] rounded-sm overflow-hidden">
                         <div
-                          className="h-full bg-stone-700"
+                          className="h-full bg-stone-800"
                           style={{ width: `${receivedWidth}%` }}
                         />
                       </div>
-                      <div className="w-20 text-xs font-mono text-stone-700 text-right tabular-nums">
+                      <div className="w-20 font-display text-sm text-stone-800 text-right tabular-nums">
                         {fmt(row.received)}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-12 text-[10px] font-mono text-stone-500 text-right">
-                        prcsd
+                    <div className="flex items-center gap-3">
+                      <div className="w-20 font-display italic text-stone-600 text-xs text-right">
+                        Processed
                       </div>
                       <div className="flex-1 h-3 bg-[--color-paper-deep] rounded-sm overflow-hidden">
                         <div
-                          className="h-full bg-emerald-600"
+                          className="h-full bg-emerald-700"
                           style={{ width: `${processedWidth}%` }}
                         />
                       </div>
-                      <div className="w-20 text-xs font-mono text-stone-700 text-right tabular-nums">
+                      <div className="w-20 font-display text-sm text-stone-800 text-right tabular-nums">
                         {fmt(row.processed)}
                       </div>
                     </div>

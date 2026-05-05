@@ -27,22 +27,17 @@ export async function GET(
     const svg = renderSlopeChartSvg(data, {
       width: 1100,
       height: 680,
-      topN: 20,
+      topN: 25,
       annotations: [
-        {
-          agency: "Department of Justice",
-          text: "FBI, ATF, DEA all report through DOJ",
-          side: "right",
-        },
         {
           agency: "Department of Health and Human Services",
           text: "CDC FOIA office eliminated, April 2025",
-          side: "right",
+          dateFraction: 0.27,
         },
         {
           agency: "Department of Transportation",
-          text: "Lost 10% of FOIA staff",
-          side: "right",
+          text: "Lost 10% of FOIA staff, early 2025",
+          dateFraction: 0.18,
         },
       ],
     });

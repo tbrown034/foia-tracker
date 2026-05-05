@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/SiteShell";
 import { Sparkline } from "@/components/Sparkline";
-import { SlopeChart } from "@/components/SlopeChart";
+import { SlopeChartInteractive } from "@/components/SlopeChartInteractive";
 import { ThroughputPanel } from "@/components/ThroughputPanel";
 import { MetricsExplainer } from "@/components/MetricsExplainer";
 import { quarterlyMarkers } from "@/lib/admin-transitions";
@@ -153,41 +153,39 @@ export default async function Home() {
         </p>
       </article>
 
-      <div className="asterism mt-12" />
 
       <section className="mx-auto max-w-5xl w-full px-6 mt-8">
-        <figcaption className="font-display italic text-stone-700 text-sm">
+        <figcaption className="font-display italic text-stone-700 text-sm leading-relaxed">
           <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
             Figure 1.
           </span>{" "}
           Five quarters of backlog change. Each line is one of the top 20
           agencies by absolute change. Left dot = backlog at the close of{" "}
-          {slope.baselineLabel}, the last full quarter of the Biden
-          administration. Right dot = {slope.currentLabel}, the most recent
-          published quarter. Slope tells you what changed; the bars in
-          Figure 2 tell you why.
+          <span className="not-italic">{slope.baselineLabel}</span> (
+          {slope.baselineFiscal}), the last full quarter before Trump&rsquo;s
+          January 20, 2025 inauguration. Right dot ={" "}
+          <span className="not-italic">{slope.currentLabel}</span> (
+          {slope.currentFiscal}), the most recent published quarter. Slope
+          tells you what changed; the bars in Figure 2 tell you why.
         </figcaption>
         <div className="figure-frame mt-4">
-          <SlopeChart
+          <SlopeChartInteractive
             data={slope}
             width={980}
             height={620}
-            topN={20}
+            defaultTopN={10}
+            expandedTopN={25}
             annotations={[
-              {
-                agency: "Department of Justice",
-                text: "FBI, ATF, DEA all report through DOJ",
-                side: "right",
-              },
               {
                 agency: "Department of Health and Human Services",
                 text: "CDC FOIA office eliminated, April 2025",
-                side: "right",
+                // April 2025 falls ~27% into the Oct 2024 → Mar 2026 period.
+                dateFraction: 0.27,
               },
               {
                 agency: "Department of Transportation",
-                text: "Lost 10% of FOIA staff",
-                side: "right",
+                text: "Lost 10% of FOIA staff, early 2025",
+                dateFraction: 0.18,
               },
             ]}
           />
@@ -231,8 +229,7 @@ export default async function Home() {
           </figcaption>
         </figure>
 
-        <div className="asterism mt-16" />
-
+  
         <div className="mt-12">
           <figcaption className="font-display italic text-stone-700 text-sm">
             <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
@@ -273,12 +270,10 @@ export default async function Home() {
           </p>
         </div>
 
-        <div className="asterism mt-16" />
-
+  
         <MetricsExplainer className="mt-12" />
       </section>
 
-      <div className="asterism mt-16" />
 
       {/* Ranked table */}
       <section className="mx-auto max-w-5xl w-full px-6 mt-12">
@@ -386,7 +381,6 @@ export default async function Home() {
         </p>
       </section>
 
-      <div className="asterism mt-16" />
 
       {/* Wall of Shame */}
       {wall.length > 0 && (
@@ -446,7 +440,6 @@ export default async function Home() {
         </section>
       )}
 
-      <div className="asterism mt-16" />
 
       {/* Reading list */}
       <section className="mx-auto max-w-5xl w-full px-6 mt-12 mb-16">

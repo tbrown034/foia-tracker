@@ -53,8 +53,8 @@ export default async function AnnualPage() {
           shows fresher numbers.
         </p>
 
-        <div className="mt-8 border border-stone-200 rounded-lg overflow-hidden">
-          <table className="w-full">
+        <div className="mt-8 border border-stone-200 rounded-lg overflow-x-auto">
+          <table className="w-full min-w-[42rem]">
             <thead className="bg-stone-50 border-b border-stone-200">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-stone-600 w-12">

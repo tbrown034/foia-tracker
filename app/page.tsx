@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteShell } from "@/components/SiteShell";
 import { Sparkline } from "@/components/Sparkline";
 import { SlopeChartInteractive } from "@/components/SlopeChartInteractive";
+import { SlopeMobileList } from "@/components/SlopeMobileList";
 import { ThroughputPanel } from "@/components/ThroughputPanel";
 import { MetricsExplainer } from "@/components/MetricsExplainer";
 import { quarterlyMarkers } from "@/lib/admin-transitions";
@@ -169,26 +170,36 @@ export default async function Home() {
           tells you what changed; the bars in Figure 2 tell you why.
         </figcaption>
         <div className="figure-frame mt-4">
-          <SlopeChartInteractive
-            data={slope}
-            width={980}
-            height={620}
-            defaultTopN={10}
-            expandedTopN={25}
-            annotations={[
-              {
-                agency: "Department of Health and Human Services",
-                text: "CDC FOIA office eliminated, April 2025",
-                // April 2025 falls ~27% into the Oct 2024 → Mar 2026 period.
-                dateFraction: 0.27,
-              },
-              {
-                agency: "Department of Transportation",
-                text: "Lost 10% of FOIA staff, early 2025",
-                dateFraction: 0.18,
-              },
-            ]}
-          />
+          {/* Slope chart on tablet+, list view on mobile */}
+          <div className="hidden md:block">
+            <SlopeChartInteractive
+              data={slope}
+              width={980}
+              height={620}
+              defaultTopN={10}
+              expandedTopN={25}
+              annotations={[
+                {
+                  agency: "Department of Health and Human Services",
+                  text: "CDC FOIA office eliminated, April 2025",
+                  // April 2025 falls ~27% into the Oct 2024 → Mar 2026 period.
+                  dateFraction: 0.27,
+                },
+                {
+                  agency: "Department of Transportation",
+                  text: "Lost 10% of FOIA staff, early 2025",
+                  dateFraction: 0.18,
+                },
+              ]}
+            />
+          </div>
+          <div className="md:hidden">
+            <SlopeMobileList
+              data={slope}
+              defaultTopN={10}
+              expandedTopN={25}
+            />
+          </div>
         </div>
         <p className="font-display text-xs italic text-stone-600 mt-3 max-w-3xl leading-snug">
           Source: FOIA.gov Quarterly Report API. Retrieved May 4, 2026.

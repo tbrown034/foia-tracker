@@ -26,29 +26,38 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           </p>
         </div>
         <div className="border-t border-[--color-rule]">
-          <div className="mx-auto max-w-5xl px-6 py-2.5">
-            <nav className="flex items-center gap-6 text-sm font-display">
-              <Link href="/" className="text-stone-700 hover:text-stone-900">
+          <div className="mx-auto max-w-5xl px-6">
+            <nav className="flex items-center gap-1 sm:gap-2 text-sm font-display -mx-3">
+              <Link
+                href="/"
+                className="text-stone-700 hover:text-stone-900 px-3 py-3"
+              >
                 Quarterly
               </Link>
-              <span className="text-stone-300">·</span>
+              <span className="text-stone-300" aria-hidden="true">
+                ·
+              </span>
               <Link
                 href="/annual"
-                className="text-stone-700 hover:text-stone-900"
+                className="text-stone-700 hover:text-stone-900 px-3 py-3"
               >
                 Annual
               </Link>
-              <span className="text-stone-300">·</span>
+              <span className="text-stone-300" aria-hidden="true">
+                ·
+              </span>
               <Link
                 href="/data"
-                className="text-stone-700 hover:text-stone-900"
+                className="text-stone-700 hover:text-stone-900 px-3 py-3"
               >
                 Data
               </Link>
-              <span className="text-stone-300">·</span>
+              <span className="text-stone-300" aria-hidden="true">
+                ·
+              </span>
               <Link
                 href="/about"
-                className="text-stone-700 hover:text-stone-900"
+                className="text-stone-700 hover:text-stone-900 px-3 py-3"
               >
                 About
               </Link>

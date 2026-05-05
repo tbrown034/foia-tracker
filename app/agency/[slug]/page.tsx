@@ -157,7 +157,7 @@ export default async function AgencyPage({
           <p className="text-sm text-stone-600 mt-1">
             Pending requests at end of each fiscal year.
           </p>
-          <div className="mt-4 border border-stone-200 rounded-lg p-6 bg-white">
+          <div className="mt-4 border border-stone-200 rounded-lg p-6 bg-white fluid-svg">
             <Sparkline
               data={annualSeries}
               width={900}
@@ -318,7 +318,7 @@ export default async function AgencyPage({
               attorney-client) is highlighted — it&rsquo;s the most-fought
               exemption in FOIA litigation.
             </p>
-            <div className="mt-4 border border-stone-200 rounded-lg p-6 bg-white overflow-x-auto">
+            <div className="mt-4 border border-stone-200 rounded-lg p-6 bg-white fluid-svg">
               <ExemptionBars data={exemptions} width={720} height={220} />
             </div>
           </section>

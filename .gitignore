@@ -51,3 +51,4 @@ next-env.d.ts
 # Cached upstream data dumps. The ingest scripts re-download as needed —
 # nothing here belongs in git.
 /data/raw/
+/data/review/

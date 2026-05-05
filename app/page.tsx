@@ -101,23 +101,38 @@ export default async function Home() {
 
   return (
     <SiteShell>
-      <article className="mx-auto max-w-5xl w-full px-6 pt-14 pb-12">
-        {/* Kicker */}
-        <p className="font-display italic text-stone-500 text-sm">
-          Federal records requests · five quarters · {stats.baseline_label}–
+      <article className="mx-auto max-w-5xl w-full px-6 pt-12 pb-10">
+        {/* Editorial dateline — small caps, all-caps */}
+        <p className="font-display italic text-stone-600 text-xs [font-variant-caps:small-caps] tracking-wider">
+          Federal records requests &middot; {stats.baseline_label} through{" "}
           {stats.current_label}
         </p>
 
         {/* Headline — neutral, descriptive */}
-        <h1 className="font-display text-stone-900 text-4xl md:text-6xl leading-[1] mt-3 max-w-3xl">
-          The federal FOIA backlog
+        <h1 className="font-display text-stone-900 text-5xl md:text-7xl leading-[0.95] mt-4 max-w-3xl">
+          The federal
+          <br />
+          <span className="italic">FOIA backlog</span>
         </h1>
 
-        {/* Hero stat woven into the standfirst */}
-        <p className="font-display text-stone-900 text-lg md:text-xl leading-snug mt-7 max-w-prose">
+        {/* Editorial byline rule */}
+        <div className="mt-8 flex items-center gap-4">
+          <span className="font-display italic text-stone-700 text-sm">
+            By&nbsp;<span className="not-italic">Trevor Brown</span>
+          </span>
+          <span className="text-stone-400">·</span>
+          <span className="font-display italic text-stone-600 text-sm">
+            Updated {updatedAt}
+          </span>
+        </div>
+
+        {/* Standfirst with drop cap */}
+        <p className="lede font-display text-stone-900 text-lg md:text-xl leading-relaxed mt-8 max-w-prose">
           As of the close of {stats.current_label}, federal agencies are
           holding{" "}
-          <span className="tabular-nums">{fmt(stats.total_current)}</span>{" "}
+          <span className="tabular-nums font-semibold">
+            {fmt(stats.total_current)}
+          </span>{" "}
           unanswered FOIA requests — up from{" "}
           <span className="tabular-nums">{fmt(stats.total_baseline)}</span>{" "}
           five quarters earlier.{" "}
@@ -130,30 +145,29 @@ export default async function Home() {
           <span className="tabular-nums">{overallOldestYears} years</span>.
         </p>
 
-        {/* Lede / dateline */}
-        <p className="text-stone-600 text-sm italic mt-5 max-w-prose leading-relaxed">
+        {/* Methodological dateline */}
+        <p className="text-stone-600 text-sm italic mt-6 max-w-prose leading-relaxed font-display">
           The numbers are self-reported by agencies under the FOIA Improvement
           Act of 2016. They include perfected requests still open at quarter
-          end and exclude administrative appeals. Updated {updatedAt}.
+          end and exclude administrative appeals.
         </p>
       </article>
 
+      <div className="asterism mt-12" />
+
       <section className="mx-auto max-w-5xl w-full px-6 mt-8">
-        <p className="font-display italic text-stone-500 text-sm">
-          Slope chart · top 20 agencies by absolute change in backlog
-        </p>
-        <h2 className="font-display text-stone-900 text-3xl md:text-4xl leading-tight mt-2">
-          Five quarters of backlog change
-        </h2>
-        <p className="text-stone-700 mt-3 max-w-prose leading-relaxed">
-          Each line is one of the top 20 agencies by absolute change. Left
-          dot = backlog at the close of {slope.baselineLabel}, the last
-          full quarter of the Biden administration. Right dot = backlog at
-          the close of {slope.currentLabel}, the most recent published
-          quarter. Slope tells you what changed; the bars below tell you
-          why.
-        </p>
-        <div className="mt-8">
+        <figcaption className="font-display italic text-stone-700 text-sm">
+          <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
+            Figure 1.
+          </span>{" "}
+          Five quarters of backlog change. Each line is one of the top 20
+          agencies by absolute change. Left dot = backlog at the close of{" "}
+          {slope.baselineLabel}, the last full quarter of the Biden
+          administration. Right dot = {slope.currentLabel}, the most recent
+          published quarter. Slope tells you what changed; the bars in
+          Figure 2 tell you why.
+        </figcaption>
+        <div className="figure-frame mt-4">
           <SlopeChart
             data={slope}
             width={980}
@@ -178,54 +192,64 @@ export default async function Home() {
             ]}
           />
         </div>
-        <p className="text-xs italic text-stone-500 mt-4 max-w-3xl">
+        <p className="font-display text-xs italic text-stone-600 mt-3 max-w-3xl leading-snug">
           Source: FOIA.gov Quarterly Report API. Retrieved May 4, 2026.
-          Backlogged means perfected requests open more than 20 working
+          Backlogged means perfected requests open more than twenty working
           days. Log scale on the y-axis. Hover any line for exact numbers.{" "}
           <a
             href="/api/data/slope.csv"
-            className="underline hover:text-stone-700"
+            className="underline hover:text-stone-800"
             download
           >
             Download data (CSV)
           </a>{" "}
-          ·{" "}
+          &middot;{" "}
           <a
             href="/api/chart/slope.svg"
-            className="underline hover:text-stone-700"
+            className="underline hover:text-stone-800"
             download
           >
             Download chart (SVG)
           </a>
         </p>
 
-        {/* Pull quote */}
-        <figure className="mt-12 mx-auto max-w-2xl border-l-2 border-stone-800 pl-6">
+        {/* Pull quote — editorial set, larger ornamental quote mark */}
+        <figure className="mt-16 mx-auto max-w-3xl text-center">
+          <span
+            aria-hidden="true"
+            className="block font-display text-stone-300 text-7xl leading-none mb-2 select-none"
+          >
+            &ldquo;
+          </span>
           <blockquote className="font-display text-stone-900 text-2xl md:text-3xl leading-snug italic">
-            &ldquo;An unprecedented breakdown in the infrastructure
-            supporting public access to government information.&rdquo;
+            An unprecedented breakdown in the infrastructure supporting
+            public access to government information.
           </blockquote>
-          <figcaption className="mt-4 text-sm text-stone-600 font-display not-italic [font-variant-caps:small-caps]">
-            American Oversight, congressional testimony, April 25, 2025
+          <figcaption className="mt-5 text-sm text-stone-700 font-display not-italic [font-variant-caps:small-caps] tracking-wider">
+            American Oversight &middot; Congressional Testimony &middot;
+            April&nbsp;25,&nbsp;2025
           </figcaption>
         </figure>
 
-        <div className="mt-16">
-          <p className="font-display italic text-stone-500 text-sm">
-            Throughput · what drove the change
-          </p>
-          <h2 className="font-display text-stone-900 text-3xl md:text-4xl leading-tight mt-2">
-            Why backlogs moved
-          </h2>
-          <p className="text-stone-700 mt-3 max-w-prose leading-relaxed">
-            A backlog grows when an agency takes in more requests than it
-            closes. The bars below show the top 12 agencies by request
-            volume across the same five-quarter window: dark = received,
-            green = processed. The &ldquo;closed / received&rdquo; column
-            is that ratio — anything below 100% means the queue grew.
-          </p>
+        <div className="asterism mt-16" />
+
+        <div className="mt-12">
+          <figcaption className="font-display italic text-stone-700 text-sm">
+            <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
+              Figure 2.
+            </span>{" "}
+            Why backlogs moved. A backlog grows when an agency takes in
+            more requests than it closes. The bars show the top 12
+            agencies by request volume across the same five-quarter
+            window: dark = received, green = processed. The &ldquo;closed
+            / received&rdquo; column is that ratio — anything below 100%
+            means the queue grew.
+          </figcaption>
+          <div className="figure-frame mt-4">
+            <ThroughputPanel data={throughput} />
+          </div>
           {worstThroughput && (
-            <p className="font-display italic text-stone-700 text-base mt-3 max-w-prose">
+            <p className="font-display italic text-stone-700 text-base mt-4 max-w-prose leading-relaxed">
               Of the {throughput.length} highest-volume agencies on the
               list, {fallingBehindCount} closed fewer requests than they
               received over the five quarters. The widest gap was at{" "}
@@ -236,15 +260,12 @@ export default async function Home() {
               of what came in.
             </p>
           )}
-          <div className="mt-8">
-            <ThroughputPanel data={throughput} />
-          </div>
-          <p className="text-xs italic text-stone-500 mt-4 max-w-3xl">
+          <p className="font-display text-xs italic text-stone-600 mt-3 max-w-3xl leading-snug">
             Source: FOIA.gov Quarterly Report API, FY2025 Q1 through{" "}
             {stats.current_label}. Retrieved May 4, 2026.{" "}
             <a
               href="/api/data/quarterly.csv"
-              className="underline hover:text-stone-700"
+              className="underline hover:text-stone-800"
               download
             >
               Download underlying quarterly CSV
@@ -252,47 +273,48 @@ export default async function Home() {
           </p>
         </div>
 
-        <MetricsExplainer className="mt-16" />
+        <div className="asterism mt-16" />
+
+        <MetricsExplainer className="mt-12" />
       </section>
 
-      {/* Ranked table */}
-      <section className="mx-auto max-w-5xl w-full px-6 mt-16">
-        <p className="font-display italic text-stone-500 text-sm">
-          Ranked table · {periodLabel}
-        </p>
-        <h2 className="font-display text-stone-900 text-3xl md:text-4xl leading-tight mt-2">
-          Largest current backlogs
-        </h2>
-        <p className="text-stone-700 mt-3 max-w-prose leading-relaxed">
-          Top 25 federal agencies by pending FOIA requests at end of{" "}
-          {periodLabel}, with the trend across recent quarters and
-          quarter-over-quarter change vs. {prevQ}. Click any agency for
-          its full history.
-        </p>
+      <div className="asterism mt-16" />
 
-        <div className="mt-8 border-t border-stone-300">
+      {/* Ranked table */}
+      <section className="mx-auto max-w-5xl w-full px-6 mt-12">
+        <figcaption className="font-display italic text-stone-700 text-sm">
+          <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
+            Table 1.
+          </span>{" "}
+          Largest current backlogs. Top 25 federal agencies by pending
+          FOIA requests at end of {periodLabel}, with the trend across
+          recent quarters and quarter-over-quarter change vs. {prevQ}.
+          Click any agency for its full history.
+        </figcaption>
+
+        <div className="mt-4 border-t border-stone-900">
           <table className="w-full">
-            <thead className="border-b border-stone-200">
+            <thead className="border-b border-[--color-rule]">
               <tr>
-                <th className="py-3 text-left text-sm font-display italic text-stone-500 w-12">
+                <th className="py-3 text-left font-display italic text-sm text-stone-700 w-12">
                   Rank
                 </th>
-                <th className="py-3 text-left text-sm font-display italic text-stone-500">
+                <th className="py-3 text-left font-display italic text-sm text-stone-700">
                   Agency
                 </th>
-                <th className="py-3 text-right text-sm font-display italic text-stone-500">
+                <th className="py-3 text-right font-display italic text-sm text-stone-700">
                   Backlog ({periodLabel})
                 </th>
-                <th className="py-3 text-right text-sm font-display italic text-stone-500">
+                <th className="py-3 text-right font-display italic text-sm text-stone-700">
                   vs. {prevQ}
                 </th>
-                <th className="py-3 text-left text-sm font-display italic text-stone-500 w-36 pl-4">
+                <th className="py-3 text-left font-display italic text-sm text-stone-700 w-36 pl-4">
                   Trend
                 </th>
-                <th className="py-3 text-right text-sm font-display italic text-stone-500">
+                <th className="py-3 text-right font-display italic text-sm text-stone-700">
                   Received
                 </th>
-                <th className="py-3 text-right text-sm font-display italic text-stone-500">
+                <th className="py-3 text-right font-display italic text-sm text-stone-700">
                   Processed
                 </th>
               </tr>
@@ -301,9 +323,9 @@ export default async function Home() {
               {rows.map((row, i) => (
                 <tr
                   key={row.agency}
-                  className="border-b border-stone-100 last:border-b-0 hover:bg-stone-50"
+                  className="border-b border-[--color-rule] last:border-b-0 hover:bg-[--color-paper-deep]"
                 >
-                  <td className="py-3 text-stone-500 font-mono text-sm">
+                  <td className="py-3 text-stone-500 font-display italic text-sm">
                     {i + 1}
                   </td>
                   <td className="py-3 pr-4">
@@ -318,7 +340,7 @@ export default async function Home() {
                     {fmt(row.backlog_latest)}
                   </td>
                   <td
-                    className={`py-3 text-right font-mono text-sm tabular-nums ${deltaColor(
+                    className={`py-3 text-right font-display italic text-sm tabular-nums ${deltaColor(
                       row.delta_pct
                     )}`}
                   >
@@ -334,10 +356,10 @@ export default async function Home() {
                       ariaLabel={`Backlog trend for ${row.agency}`}
                     />
                   </td>
-                  <td className="py-3 text-right font-mono text-sm text-stone-500 tabular-nums">
+                  <td className="py-3 text-right font-display text-sm text-stone-600 tabular-nums">
                     {fmt(row.received_latest)}
                   </td>
-                  <td className="py-3 text-right font-mono text-sm text-stone-500 tabular-nums">
+                  <td className="py-3 text-right font-display text-sm text-stone-600 tabular-nums">
                     {fmt(row.processed_latest)}
                   </td>
                 </tr>
@@ -346,74 +368,76 @@ export default async function Home() {
           </table>
         </div>
 
-        <p className="text-xs italic text-stone-500 mt-4 max-w-3xl">
+        <p className="font-display text-xs italic text-stone-600 mt-3 max-w-3xl leading-snug">
           Source: FOIA.gov Quarterly Report API. Retrieved May 4, 2026.
           &ldquo;All agencies&rdquo; meta-row excluded. Trend covers up to
           eight most recent quarters.{" "}
           <a
             href="/api/data/quarterly.csv"
-            className="underline hover:text-stone-700"
+            className="underline hover:text-stone-800"
             download
           >
             Download CSV
           </a>{" "}
-          ·{" "}
-          <Link href="/annual" className="underline hover:text-stone-700">
+          &middot;{" "}
+          <Link href="/annual" className="underline hover:text-stone-800">
             See seventeen-year annual history
           </Link>
         </p>
       </section>
 
+      <div className="asterism mt-16" />
+
       {/* Wall of Shame */}
       {wall.length > 0 && (
-        <section className="mx-auto max-w-5xl w-full px-6 mt-20 mb-16">
-          <p className="font-display italic text-stone-500 text-sm">
-            Wall of Shame · cross-agency
-          </p>
-          <h2 className="font-display text-stone-900 text-3xl md:text-4xl leading-tight mt-2">
-            The five oldest requests in the government
-          </h2>
-          <p className="text-stone-700 mt-3 leading-relaxed max-w-prose">
-            Every federal agency that reports a top-10 oldest list does so
-            once a year. These five are the five oldest across that pool at
-            end of FY{wall[0]?.fiscal_year}. The longest has been pending
-            since before the iPhone shipped.
-          </p>
-          <ol className="mt-8 space-y-6">
+        <section className="mx-auto max-w-5xl w-full px-6 mt-12">
+          <figcaption className="font-display italic text-stone-700 text-sm">
+            <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
+              Wall of Shame.
+            </span>{" "}
+            The five oldest unanswered FOIA requests in the federal
+            government, drawn from every agency&rsquo;s top-10 oldest list
+            at end of FY{wall[0]?.fiscal_year}. The longest has been
+            pending since before the iPhone shipped.
+          </figcaption>
+          <ol className="mt-6 border-t border-stone-900">
             {wall.map((r, i) => (
               <li
                 key={`${r.agency}-${r.rank}`}
-                className="border-t border-stone-200 pt-4"
+                className="border-b border-[--color-rule] py-5 grid grid-cols-12 gap-4 items-baseline"
               >
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className="font-display italic text-stone-400 text-sm">
-                    No. {i + 1}
-                  </span>
-                  <span className="font-display text-stone-900 text-3xl tabular-nums">
-                    {(r.days_pending / 365).toFixed(1)} years
-                  </span>
+                <span className="col-span-1 font-display italic text-stone-500 text-base">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div className="col-span-7">
+                  <Link
+                    href={`/agency/${r.slug}`}
+                    className="font-display text-stone-900 text-xl md:text-2xl block hover:underline leading-tight"
+                  >
+                    {r.agency}
+                  </Link>
+                  <p className="text-stone-700 mt-1 text-sm font-display italic">
+                    Filed {fmtDate(r.date_received)} ·{" "}
+                    <span className="tabular-nums">
+                      {r.days_pending.toLocaleString()} days pending
+                    </span>
+                  </p>
                 </div>
-                <Link
-                  href={`/agency/${r.slug}`}
-                  className="font-display text-stone-900 text-2xl block mt-1 hover:underline"
-                >
-                  {r.agency}
-                </Link>
-                <p className="text-stone-700 mt-1">
-                  Filed {fmtDate(r.date_received)}.{" "}
-                  <span className="tabular-nums text-stone-500">
-                    {r.days_pending.toLocaleString()} days pending.
+                <span className="col-span-4 font-display text-stone-900 text-3xl md:text-4xl tabular-nums text-right leading-none">
+                  {(r.days_pending / 365).toFixed(1)}
+                  <span className="text-base italic text-stone-500 ml-1">
+                    yrs
                   </span>
-                </p>
+                </span>
               </li>
             ))}
           </ol>
-          <p className="text-xs italic text-stone-500 mt-6">
+          <p className="font-display text-xs italic text-stone-600 mt-3 max-w-3xl leading-snug">
             Source: FOIA.gov bulk Annual Report CSVs, FY{wall[0]?.fiscal_year}.
             Retrieved May 4, 2026.{" "}
             <a
               href="/api/data/oldest-pending.csv"
-              className="underline hover:text-stone-700"
+              className="underline hover:text-stone-800"
               download
             >
               Download CSV
@@ -422,14 +446,16 @@ export default async function Home() {
         </section>
       )}
 
+      <div className="asterism mt-16" />
+
       {/* Reading list */}
-      <section className="mx-auto max-w-5xl w-full px-6 mt-20 mb-16 border-t border-stone-200 pt-10">
-        <p className="font-display italic text-stone-500 text-sm">
-          Further reading
-        </p>
-        <h2 className="font-display text-stone-900 text-2xl md:text-3xl leading-tight mt-2">
-          The reporting underneath this dashboard
-        </h2>
+      <section className="mx-auto max-w-5xl w-full px-6 mt-12 mb-16">
+        <figcaption className="font-display italic text-stone-700 text-sm">
+          <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
+            Further reading.
+          </span>{" "}
+          The reporting underneath this dashboard.
+        </figcaption>
         <ul className="mt-6 space-y-5">
           <li>
             <a

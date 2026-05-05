@@ -11,19 +11,19 @@ export function MetricsExplainer({
 }: Props) {
   return (
     <aside
-      className={`border border-stone-200 bg-stone-50 rounded-lg p-5 ${className}`}
+      className={`border-t border-b border-[--color-rule] py-6 ${className}`}
       aria-label="How to read annual vs. quarterly data"
     >
-      <div className="text-xs uppercase tracking-wide text-stone-500">
-        How to read this
-      </div>
-      <h3 className="font-display text-xl text-stone-900 mt-1">
-        Annual and quarterly numbers don&rsquo;t mean the same thing
-      </h3>
+      <p className="font-display italic text-stone-700 text-sm">
+        <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
+          A note on the figures.
+        </span>{" "}
+        Annual and quarterly numbers don&rsquo;t mean the same thing.
+      </p>
 
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
         <div>
-          <div className="font-mono text-xs uppercase tracking-wide text-stone-700">
+          <div className="font-display italic text-stone-700">
             Annual report
           </div>
           <ul className="mt-2 space-y-1.5 text-stone-700">
@@ -49,7 +49,7 @@ export function MetricsExplainer({
           </ul>
         </div>
         <div>
-          <div className="font-mono text-xs uppercase tracking-wide text-stone-700">
+          <div className="font-display italic text-stone-700">
             Quarterly report
           </div>
           <ul className="mt-2 space-y-1.5 text-stone-700">

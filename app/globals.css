@@ -4,10 +4,53 @@
   --font-sans: var(--font-source-serif), Georgia, "Times New Roman", serif;
   --font-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --color-paper: #faf7ee;
+  --color-paper-deep: #f4efe1;
+  --color-rule: #d6cfb8;
 }
 
 body {
   font-family: var(--font-sans);
   color: var(--color-stone-900);
-  background: #ffffff;
+  background: var(--color-paper);
+  /* Subtle paper texture via layered gradients — almost imperceptible but
+     pulls the page away from screen-white into print-stock territory. */
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(120, 100, 60, 0.04) 0, transparent 60%),
+    radial-gradient(circle at 80% 70%, rgba(120, 100, 60, 0.03) 0, transparent 60%);
+}
+
+/* Drop cap for editorial prose. Apply via class="lede". */
+.lede::first-letter {
+  float: left;
+  font-family: var(--font-display);
+  font-size: 5.25rem;
+  line-height: 0.82;
+  padding: 0.4rem 0.7rem 0 0;
+  font-weight: 600;
+  color: var(--color-stone-900);
+}
+
+/* Thin horizontal rules in print color. */
+.rule-paper {
+  border-color: var(--color-rule);
+}
+
+/* Ornamental three-asterism, centered, used between major sections. */
+.asterism::before {
+  content: "⁂";
+  display: block;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: #a8a29e;
+  letter-spacing: 0.4em;
+  padding-left: 0.4em;
+}
+
+/* Figure framing — thin top + bottom rules around chart figures. */
+.figure-frame {
+  border-top: 1px solid var(--color-rule);
+  border-bottom: 1px solid var(--color-rule);
+  padding: 1.75rem 0;
 }

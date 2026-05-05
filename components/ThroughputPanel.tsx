@@ -26,17 +26,17 @@ export function ThroughputPanel({ data }: Props) {
   const maxReceived = Math.max(...data.map((d) => d.received));
 
   return (
-    <div className="border border-stone-200 rounded-lg p-6 bg-white">
+    <div>
       <table className="w-full">
         <thead>
-          <tr className="border-b border-stone-200">
-            <th className="text-left text-xs font-semibold uppercase tracking-wide text-stone-600 pb-2">
+          <tr className="border-b border-[--color-rule]">
+            <th className="text-left font-display italic text-sm text-stone-700 pb-2">
               Agency
             </th>
-            <th className="text-left text-xs font-semibold uppercase tracking-wide text-stone-600 pb-2 w-1/2">
-              Received vs. processed during Trump 2.0
+            <th className="text-left font-display italic text-sm text-stone-700 pb-2 w-1/2">
+              Received vs. processed
             </th>
-            <th className="text-right text-xs font-semibold uppercase tracking-wide text-stone-600 pb-2">
+            <th className="text-right font-display italic text-sm text-stone-700 pb-2">
               Closed / received
             </th>
           </tr>
@@ -52,7 +52,7 @@ export function ThroughputPanel({ data }: Props) {
             return (
               <tr
                 key={row.agency}
-                className="border-b border-stone-100 last:border-b-0"
+                className="border-b border-[--color-rule] last:border-b-0"
               >
                 <td className="py-3 pr-4">
                   <Link
@@ -68,7 +68,7 @@ export function ThroughputPanel({ data }: Props) {
                       <div className="w-12 text-[10px] font-mono text-stone-500 text-right">
                         rcvd
                       </div>
-                      <div className="flex-1 h-3 bg-stone-50 rounded-sm overflow-hidden">
+                      <div className="flex-1 h-3 bg-[--color-paper-deep] rounded-sm overflow-hidden">
                         <div
                           className="h-full bg-stone-700"
                           style={{ width: `${receivedWidth}%` }}
@@ -82,7 +82,7 @@ export function ThroughputPanel({ data }: Props) {
                       <div className="w-12 text-[10px] font-mono text-stone-500 text-right">
                         prcsd
                       </div>
-                      <div className="flex-1 h-3 bg-stone-50 rounded-sm overflow-hidden">
+                      <div className="flex-1 h-3 bg-[--color-paper-deep] rounded-sm overflow-hidden">
                         <div
                           className="h-full bg-emerald-600"
                           style={{ width: `${processedWidth}%` }}

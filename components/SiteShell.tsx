@@ -7,8 +7,7 @@ import {
 import { getSiteFreshness } from "@/lib/queries";
 
 const LINKS = [
-  { href: "/", label: "Quarterly" },
-  { href: "/annual", label: "Annual" },
+  { href: "/agencies", label: "Agencies" },
   { href: "/data", label: "Data" },
   { href: "/about", label: "About" },
 ];
@@ -46,15 +45,15 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       <div className="h-[3px] bg-stone-900" />
 
       <header className="border-b border-[--color-rule]">
-        <nav className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between gap-6 flex-wrap">
+        <nav className="mx-auto max-w-5xl px-5 sm:px-6 py-4 flex items-center justify-between gap-4 sm:gap-6">
           <Link
             href="/"
-            className="font-display text-stone-900 text-2xl md:text-3xl leading-none tracking-tight"
+            className="font-display text-stone-900 text-xl sm:text-2xl md:text-3xl leading-none tracking-tight"
             aria-label="FOIA Tracker home"
           >
             FOIA Tracker
           </Link>
-          <div className="flex items-center gap-5 text-sm font-display text-stone-600">
+          <div className="flex items-center gap-4 sm:gap-5 text-sm font-display text-stone-600">
             {LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -64,17 +63,17 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                 {link.label}
               </Link>
             ))}
+            <Link
+              href="/about#freshness"
+              className={`hidden md:inline-block rounded-sm border px-2.5 py-1 text-xs font-display italic tabular-nums ${
+                isStale
+                  ? "border-stone-300 text-stone-600 bg-stone-50"
+                  : "border-amber-300 text-stone-900 bg-amber-50"
+              }`}
+            >
+              {quarterEnd ? `Through ${quarterEnd}` : "Freshness unknown"}
+            </Link>
           </div>
-          <Link
-            href="/about#freshness"
-            className={`rounded-sm border px-2.5 py-1 text-xs font-display italic tabular-nums ${
-              isStale
-                ? "border-stone-300 text-stone-600 bg-stone-50"
-                : "border-amber-300 text-stone-900 bg-amber-50"
-            }`}
-          >
-            {quarterEnd ? `Quarterly through ${quarterEnd}` : "Freshness unknown"}
-          </Link>
         </nav>
       </header>
 

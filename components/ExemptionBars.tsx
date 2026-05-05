@@ -46,7 +46,7 @@ export function ExemptionBars({ data, width = 600, height = 220 }: Props) {
               x={xPos + barWidth / 2}
               y={height - padY + 14}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={16}
               fill="#57534e"
               fontFamily="ui-monospace"
             >
@@ -56,7 +56,7 @@ export function ExemptionBars({ data, width = 600, height = 220 }: Props) {
               x={xPos + barWidth / 2}
               y={y(d.invocations) - 4}
               textAnchor="middle"
-              fontSize={10}
+              fontSize={16}
               fill="#1c1917"
               fontFamily="ui-monospace"
             >

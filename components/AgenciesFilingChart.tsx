@@ -139,7 +139,7 @@ export function AgenciesFilingChart({ data }: Props) {
                 y={y(t)}
                 textAnchor="end"
                 dominantBaseline="middle"
-                fontSize={12}
+                fontSize={18}
                 fill={COLOR_AXIS}
                 fontFamily="ui-monospace, monospace"
               >
@@ -165,7 +165,7 @@ export function AgenciesFilingChart({ data }: Props) {
                 x={x(BIDEN_INAUG_X)}
                 y={PAD_TOP - 8}
                 textAnchor="start"
-                fontSize={11}
+                fontSize={14}
                 fill="#1e3a8a"
                 fontFamily="ui-monospace, monospace"
                 fontStyle="italic"
@@ -191,7 +191,7 @@ export function AgenciesFilingChart({ data }: Props) {
                 x={x(TRUMP_INAUG_X)}
                 y={PAD_TOP - 8}
                 textAnchor="middle"
-                fontSize={11}
+                fontSize={14}
                 fill="#991b1b"
                 fontFamily="ui-monospace, monospace"
                 fontStyle="italic"
@@ -247,7 +247,7 @@ export function AgenciesFilingChart({ data }: Props) {
             x={x(peak.x)}
             y={y(peak.agency_count) - 10}
             textAnchor="middle"
-            fontSize={11}
+            fontSize={14}
             fontWeight={600}
             fill={COLOR_LINE}
             fontFamily="ui-monospace, monospace"
@@ -260,7 +260,7 @@ export function AgenciesFilingChart({ data }: Props) {
             x={x(last.x) + 6}
             y={y(last.agency_count)}
             dominantBaseline="middle"
-            fontSize={13}
+            fontSize={16}
             fontWeight={600}
             fill={COLOR_DOT}
             fontFamily="ui-monospace, monospace"
@@ -271,7 +271,7 @@ export function AgenciesFilingChart({ data }: Props) {
             x={x(last.x) + 6}
             y={y(last.agency_count) + 13}
             dominantBaseline="middle"
-            fontSize={10}
+            fontSize={16}
             fill={COLOR_DOT}
           >
             latest
@@ -300,7 +300,7 @@ export function AgenciesFilingChart({ data }: Props) {
                 x={x(p.x)}
                 y={H - PAD_BOTTOM + 20}
                 textAnchor="middle"
-                fontSize={12}
+                fontSize={18}
                 fill={COLOR_AXIS}
                 fontFamily="ui-monospace, monospace"
               >
@@ -310,7 +310,7 @@ export function AgenciesFilingChart({ data }: Props) {
                 x={x(p.x)}
                 y={H - PAD_BOTTOM + 36}
                 textAnchor="middle"
-                fontSize={10}
+                fontSize={16}
                 fill="#a8a29e"
                 fontFamily="ui-monospace, monospace"
               >
@@ -323,7 +323,7 @@ export function AgenciesFilingChart({ data }: Props) {
           <text
             x={PAD_LEFT - 48}
             y={PAD_TOP - 18}
-            fontSize={11}
+            fontSize={14}
             fill={COLOR_LINE}
             fontFamily="ui-monospace, monospace"
           >

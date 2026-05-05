@@ -200,14 +200,15 @@ export default async function AboutPage() {
 
         <section className="mt-10">
           <h2 className="font-display text-2xl text-stone-900">
-            Agencies that stopped filing
+            Agencies that have stopped filing
           </h2>
           <p className="text-stone-700 mt-3">
             27 federal agencies that had been reporting quarterly FOIA
-            data stopped doing so during the Trump administration. The
-            list, grouped by the last quarter each agency filed, with
-            their FY2024 average requests received per quarter where
-            available:
+            data last did so between April and December 2025 and have
+            not filed since. None of them filed FY2026 Q2 (Jan–Mar
+            2026). The list, grouped by the last quarter each agency
+            filed, with their FY2024 average requests received per
+            quarter where available:
           </p>
           <h3 className="text-sm font-display [font-variant-caps:small-caps] tracking-wider text-stone-900 mt-5">
             Last filed FY2025 Q3 (April–June 2025)
@@ -353,8 +354,8 @@ export default async function AboutPage() {
               the home page
             </Link>{" "}
             or browse{" "}
-            <Link href="/annual" className="underline hover:text-stone-900">
-              the 17-year annual history
+            <Link href="/agencies" className="underline hover:text-stone-900">
+              the agency directory
             </Link>
             .
           </p>

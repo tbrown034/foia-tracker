@@ -130,7 +130,7 @@ export function HeroBacklogChart({ data }: Props) {
             <text
               x={x(BIDEN_INAUG_X) + 4}
               y={PAD_TOP + 12}
-              fontSize={11}
+              fontSize={14}
               fill={COLOR_MARKER_BIDEN}
               fontFamily="ui-monospace, monospace"
               fontStyle="italic"
@@ -156,7 +156,7 @@ export function HeroBacklogChart({ data }: Props) {
             <text
               x={x(TRUMP_INAUG_X) + 4}
               y={PAD_TOP + 12}
-              fontSize={11}
+              fontSize={14}
               fill={COLOR_MARKER_TRUMP}
               fontFamily="ui-monospace, monospace"
               fontStyle="italic"
@@ -188,7 +188,7 @@ export function HeroBacklogChart({ data }: Props) {
         <text
           x={x(first.x) + 8}
           y={y(first.total) + 18}
-          fontSize={13}
+          fontSize={16}
           fontWeight={600}
           fill={COLOR_LINE}
           fontFamily="ui-monospace, monospace"
@@ -198,7 +198,7 @@ export function HeroBacklogChart({ data }: Props) {
         <text
           x={x(first.x) + 8}
           y={y(first.total) + 32}
-          fontSize={11}
+          fontSize={14}
           fill={COLOR_INK}
           fontFamily="ui-monospace, monospace"
           fontStyle="italic"
@@ -210,7 +210,7 @@ export function HeroBacklogChart({ data }: Props) {
         <text
           x={x(last.x) + 8}
           y={y(last.total) - 6}
-          fontSize={15}
+          fontSize={18}
           fontWeight={700}
           fill={COLOR_LINE}
           fontFamily="ui-monospace, monospace"
@@ -220,7 +220,7 @@ export function HeroBacklogChart({ data }: Props) {
         <text
           x={x(last.x) + 8}
           y={y(last.total) + 10}
-          fontSize={11}
+          fontSize={14}
           fill={COLOR_INK}
           fontFamily="ui-monospace, monospace"
           fontStyle="italic"
@@ -234,7 +234,7 @@ export function HeroBacklogChart({ data }: Props) {
             x={x(p.x)}
             y={H - PAD_BOTTOM + 16}
             textAnchor="middle"
-            fontSize={11}
+            fontSize={14}
             fill={COLOR_AXIS}
             fontFamily="ui-monospace, monospace"
           >

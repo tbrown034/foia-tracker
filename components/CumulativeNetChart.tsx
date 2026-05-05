@@ -125,7 +125,7 @@ export function CumulativeNetChart({ data }: Props) {
             x={(x(Math.max(BIDEN_INAUG_X, xMin)) + x(Math.min(TRUMP_INAUG_X, xMax))) / 2}
             y={PAD_TOP - 12}
             textAnchor="middle"
-            fontSize={13}
+            fontSize={16}
             fontWeight={600}
             fill={COLOR_BIDEN}
             fontFamily="ui-monospace, monospace"
@@ -137,7 +137,7 @@ export function CumulativeNetChart({ data }: Props) {
             x={(x(TRUMP_INAUG_X) + x(xMax)) / 2}
             y={PAD_TOP - 12}
             textAnchor="middle"
-            fontSize={13}
+            fontSize={16}
             fontWeight={600}
             fill={COLOR_TRUMP}
             fontFamily="ui-monospace, monospace"
@@ -174,7 +174,7 @@ export function CumulativeNetChart({ data }: Props) {
                 y={y(t)}
                 textAnchor="end"
                 dominantBaseline="middle"
-                fontSize={12}
+                fontSize={15}
                 fill={COLOR_AXIS}
                 fontFamily="ui-monospace, monospace"
               >
@@ -210,7 +210,7 @@ export function CumulativeNetChart({ data }: Props) {
                 x={x(peak.x)}
                 y={y(peak.total_backlog) - 10}
                 textAnchor="middle"
-                fontSize={11}
+                fontSize={14}
                 fontWeight={600}
                 fill={COLOR_LINE}
                 fontFamily="ui-monospace, monospace"
@@ -228,7 +228,7 @@ export function CumulativeNetChart({ data }: Props) {
                 x={x(trough.x)}
                 y={y(trough.total_backlog) + 18}
                 textAnchor="middle"
-                fontSize={11}
+                fontSize={14}
                 fontWeight={600}
                 fill="#047857"
                 fontFamily="ui-monospace, monospace"
@@ -239,7 +239,7 @@ export function CumulativeNetChart({ data }: Props) {
                 x={x(trough.x)}
                 y={y(trough.total_backlog) + 32}
                 textAnchor="middle"
-                fontSize={10}
+                fontSize={16}
                 fill="#047857"
                 fontFamily="ui-monospace, monospace"
                 fontStyle="italic"
@@ -259,7 +259,7 @@ export function CumulativeNetChart({ data }: Props) {
           <text
             x={x(last.x) + 10}
             y={y(last.total_backlog) - 8}
-            fontSize={22}
+            fontSize={28}
             fontWeight={700}
             fill={COLOR_LINE}
             fontFamily="ui-monospace, monospace"
@@ -269,7 +269,7 @@ export function CumulativeNetChart({ data }: Props) {
           <text
             x={x(last.x) + 10}
             y={y(last.total_backlog) + 12}
-            fontSize={11}
+            fontSize={14}
             fill={COLOR_LINE}
             fontFamily="ui-monospace, monospace"
             fontStyle="italic"
@@ -279,7 +279,7 @@ export function CumulativeNetChart({ data }: Props) {
           <text
             x={x(last.x) + 10}
             y={y(last.total_backlog) + 26}
-            fontSize={11}
+            fontSize={14}
             fill={COLOR_LINE}
             fontFamily="ui-monospace, monospace"
             fontStyle="italic"
@@ -310,7 +310,7 @@ export function CumulativeNetChart({ data }: Props) {
                 x={x(p.x)}
                 y={H - PAD_BOTTOM + 20}
                 textAnchor="middle"
-                fontSize={12}
+                fontSize={15}
                 fill={COLOR_AXIS}
                 fontFamily="ui-monospace, monospace"
               >
@@ -320,7 +320,7 @@ export function CumulativeNetChart({ data }: Props) {
                 x={x(p.x)}
                 y={H - PAD_BOTTOM + 36}
                 textAnchor="middle"
-                fontSize={10}
+                fontSize={16}
                 fill="#a8a29e"
                 fontFamily="ui-monospace, monospace"
               >
@@ -333,7 +333,7 @@ export function CumulativeNetChart({ data }: Props) {
           <text
             x={PAD_LEFT}
             y={PAD_TOP - 36}
-            fontSize={11}
+            fontSize={14}
             fill="#44403c"
             fontFamily="ui-monospace, monospace"
           >

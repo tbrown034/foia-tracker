@@ -3,6 +3,7 @@ import { SiteShell } from "@/components/SiteShell";
 import { Sparkline } from "@/components/Sparkline";
 import { QuarterlySmallMultiples } from "@/components/QuarterlySmallMultiples";
 import { CumulativeNetChart } from "@/components/CumulativeNetChart";
+import { BacklogTally } from "@/components/BacklogTally";
 import { SlopeChartInteractive } from "@/components/SlopeChartInteractive";
 import { SlopeMobileList } from "@/components/SlopeMobileList";
 import { ThroughputPanel } from "@/components/ThroughputPanel";
@@ -11,6 +12,7 @@ import { quarterlyMarkers } from "@/lib/admin-transitions";
 import {
   fiscalQuarterShort,
   fiscalQuarterDateRange,
+  fiscalQuarterISORange,
   fiscalYearDateRange,
   type FiscalQuarter,
 } from "@/lib/fiscal";
@@ -113,6 +115,16 @@ export default async function Home() {
     (a, b) => a.catch_up_ratio - b.catch_up_ratio
   )[0];
   const latestStableBacklog = rxVsProc.points.at(-1)?.total_backlog ?? null;
+  const periodEndIso = period
+    ? fiscalQuarterISORange(period.fy, period.q as FiscalQuarter).end
+    : null;
+  const periodEndLabel = periodEndIso
+    ? new Date(periodEndIso + "T00:00:00").toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "—";
 
   return (
     <SiteShell>
@@ -121,40 +133,48 @@ export default async function Home() {
           Investigating the federal <span className="italic">FOIA backlog</span>
         </h1>
 
+        {latestStableBacklog != null && (
+          <div className="mt-8">
+            <BacklogTally
+              value={latestStableBacklog}
+              asOf={periodEndLabel}
+              unitLine="pending federal FOIA requests"
+              sourceLine={`Across the 10 largest stable-filing agencies · ${periodLabel} · FOIA.gov quarterly reports`}
+            />
+          </div>
+        )}
+
         <p className="font-display text-stone-900 text-xl md:text-2xl leading-snug mt-8 max-w-3xl">
-          Pending FOIA requests across the 10 largest stable-filing
-          federal agencies climbed to{" "}
-          <span className="tabular-nums font-semibold">
-            {fmt(latestStableBacklog)}
-          </span>{" "}
-          by the end of {periodLabel} — the highest level on record, after
-          Biden-era agencies had drawn the pile back near its FY2021
-          starting level. Another 27 agencies, including the Department of
-          Homeland Security, have stopped filing quarterly reports
-          altogether.
+          The highest level on record across the 10 largest stable-filing
+          federal agencies — a reversal of the Biden-era catch-up that had
+          drawn the pile back near its FY2021 starting level. Another 27
+          agencies, including the Department of Homeland Security, last
+          filed a quarterly report between April and December 2025 and
+          have not filed since.
         </p>
       </article>
 
 
       <section className="mx-auto max-w-5xl w-full px-6 mt-8">
-        <figcaption className="font-display italic text-stone-700 text-sm leading-relaxed max-w-3xl">
-          <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
-            Figure 1.
-          </span>{" "}
-          Combined pending FOIA requests across DOJ, DoD, HHS, DOT, EEOC,
-          Labor, SEC, Interior, EPA, and Education at the end of each
-          quarter. The pile climbed through Biden&rsquo;s first half,
-          dropped back near its FY2021 starting level by mid-2024 as
-          agencies caught up, then climbed to a new high through the first
-          five quarters of the Trump administration.
+        <h2 className="font-display text-3xl md:text-4xl text-stone-900 leading-tight max-w-3xl">
+          The pile, over time
+        </h2>
+        <p className="font-display italic text-stone-600 text-base mt-2 max-w-3xl">
+          Combined backlog of the 10 largest stable-filing agencies, every
+          quarter from FY2021 to today.
+        </p>
+        <figcaption className="font-display italic text-stone-700 text-sm leading-relaxed max-w-3xl mt-6">
+          The pile climbed through Biden&rsquo;s first half, dropped back
+          near its FY2021 starting level by mid-2024 as agencies caught
+          up, then climbed to a new high through the first five quarters
+          of the Trump administration.
         </figcaption>
         <div className="mt-4">
           <CumulativeNetChart data={rxVsProc} />
         </div>
         <p className="font-display text-xs italic text-stone-600 mt-3 max-w-3xl leading-snug">
-          Source: FOIA.gov Quarterly Report API. {quarterlyRetrieved}
-          DHS stopped filing quarterly reports after FY2025 Q3 — see
-          Figure 2.{" "}
+          Source: FOIA.gov Quarterly Report API. {quarterlyRetrieved} DHS
+          stopped filing after FY2025 Q3.{" "}
           <a
             href="/api/data/quarterly.csv"
             className="underline hover:text-stone-800"
@@ -164,18 +184,21 @@ export default async function Home() {
           </a>
         </p>
 
-        <div className="mt-16">
-          <figcaption className="font-display italic text-stone-700 text-sm leading-relaxed max-w-3xl">
-            <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
-              Figure 2.
-            </span>{" "}
-            Per-agency change in FOIA backlog from{" "}
+        <div className="mt-20">
+          <h2 className="font-display text-3xl md:text-4xl text-stone-900 leading-tight max-w-3xl">
+            Which agencies moved
+          </h2>
+          <p className="font-display italic text-stone-600 text-base mt-2 max-w-3xl">
+            Per-agency change in FOIA backlog from the last full quarter
+            before Trump took office to today.
+          </p>
+          <figcaption className="font-display italic text-stone-700 text-sm leading-relaxed max-w-3xl mt-6">
+            Each line is one agency from{" "}
             <span className="not-italic">{slope.baselineLabel}</span> (the
-            last full quarter before the Trump administration) to{" "}
+            last full quarter before Trump) to{" "}
             <span className="not-italic">{slope.currentLabel}</span> (the
-            most recent published quarter). Each line is one agency. Left
-            dot = baseline backlog; right dot = current. Lines slanting up
-            mean the pile grew; down means agencies caught up.
+            most recent published quarter). Lines slanting up mean the
+            pile grew; down means the agency caught up.
           </figcaption>
           <div className="figure-frame mt-4">
             <div className="hidden md:block">
@@ -204,12 +227,12 @@ export default async function Home() {
             <p className="text-sm text-stone-700 leading-relaxed">
               <span className="tabular-nums">{filing.total_dropouts}</span>{" "}
               federal agencies that had been filing quarterly FOIA reports
-              stopped doing so during the Trump administration. The largest, by volume, is the Department of
+              last did so between April and December 2025 and have not
+              filed since. The largest, by volume, is the Department of
               Homeland Security — the federal government&rsquo;s biggest
-              FOIA filer at roughly 225,000 requests per quarter — which
-              reported through{" "}
-              <span className="not-italic">FY2025 Q3 (April–June 2025)</span>{" "}
-              and stopped. Other notable absences include the Department
+              FOIA filer at roughly 225,000 requests per quarter — whose
+              last filing was{" "}
+              <span className="not-italic">FY2025 Q3 (April–June 2025)</span>. Other notable absences include the Department
               of Veterans Affairs, the State Department, the Department of
               Agriculture, the Office of Personnel Management, the Office
               of the Director of National Intelligence, and the Office of
@@ -247,52 +270,51 @@ export default async function Home() {
           </p>
         </div>
 
-        <div className="mt-16">
-          <figcaption className="font-display italic text-stone-700 text-sm leading-relaxed">
-            <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
-              Figure 3.
-            </span>{" "}
-            The 10 federal agencies with the largest current FOIA
-            backlogs, one panel each, across every quarter the FOIA.gov
-            Quarterly Report API exposes — FY2021 Q1 (Oct 1 – Dec 31, 2020)
-            through{" "}
+        <div className="mt-20">
+          <h2 className="font-display text-3xl md:text-4xl text-stone-900 leading-tight max-w-3xl">
+            Trajectories, agency by agency
+          </h2>
+          <p className="font-display italic text-stone-600 text-base mt-2 max-w-3xl">
+            Five years of quarterly backlog data for each of the 10
+            largest filers, side by side.
+          </p>
+          <figcaption className="font-display italic text-stone-700 text-sm leading-relaxed mt-6 max-w-3xl">
+            One panel per agency, FY2021 Q1 (Oct 1 – Dec 31, 2020) through{" "}
             {smallMultiples[0]?.series[
               smallMultiples[0].series.length - 1
             ]?.label.split(" (")[0] ?? "the latest quarter"}
-            . Figure 1 shows the combined pile; this panel shows where it
-            lives, agency by agency. The percentage is the change from the
-            first quarter to the most recent. Click an agency for its full
+            . The percentage on each panel is the change from the first
+            quarter to the most recent. Click an agency for its full
             history.
           </figcaption>
           <div className="figure-frame mt-4">
             <QuarterlySmallMultiples data={smallMultiples} />
           </div>
           <p className="font-display text-xs italic text-stone-600 mt-3 max-w-3xl leading-snug">
-            Source: FOIA.gov Quarterly Report API. {quarterlyRetrieved}
-            Backlogged means perfected requests open more than twenty
-            working days at quarter end. Each panel uses its own y-scale
-            so the shape of each agency&rsquo;s trajectory reads at a
-            glance — the absolute number above the line carries the
-            comparison. Quarterly data does not exist before FY2021 Q1; for
-            the longer view see the{" "}
-            <Link href="/annual" className="underline hover:text-stone-800">
-              17-year annual history
+            Source: FOIA.gov Quarterly Report API. {quarterlyRetrieved}{" "}
+            Each panel uses its own y-scale so the shape reads at a
+            glance; the number above the line carries the comparison. For
+            history before FY2021 see the{" "}
+            <Link href="/agencies" className="underline hover:text-stone-800">
+              the agency directory
             </Link>
             .
           </p>
         </div>
 
-        <div className="mt-16">
-          <figcaption className="font-display italic text-stone-700 text-sm">
-            <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
-              Figure 4.
-            </span>{" "}
-            Where the gap is widest. Cumulative requests received versus
-            requests processed for the top 12 agencies by request volume
-            during the Trump administration (FY2025 Q1 onward). Dark =
-            received, green = processed. The &ldquo;closed/received&rdquo;
-            column is that ratio — anything below 100% means the queue
-            grew.
+        <div className="mt-20">
+          <h2 className="font-display text-3xl md:text-4xl text-stone-900 leading-tight max-w-3xl">
+            Why the pile is growing
+          </h2>
+          <p className="font-display italic text-stone-600 text-base mt-2 max-w-3xl">
+            Requests are coming in faster than agencies are closing them.
+          </p>
+          <figcaption className="font-display italic text-stone-700 text-sm leading-relaxed mt-6 max-w-3xl">
+            Top 12 agencies by request volume during the Trump
+            administration (FY2025 Q1 onward), with cumulative received
+            vs. cumulative processed. Dark = received, green = processed.
+            The &ldquo;closed/received&rdquo; column is that ratio —
+            anything below 100% means the queue grew.
           </figcaption>
           <div className="figure-frame mt-4">
             <ThroughputPanel data={throughput} />
@@ -327,172 +349,6 @@ export default async function Home() {
       </section>
 
 
-      {/* Ranked table */}
-      <section className="mx-auto max-w-5xl w-full px-6 mt-12">
-        <figcaption className="font-display italic text-stone-700 text-sm">
-          <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
-            Table 1.
-          </span>{" "}
-          Largest current backlogs. Top 25 federal agencies by pending
-          FOIA requests at end of {periodLabel} ({periodDates}), with the
-          trend across recent quarters and quarter-over-quarter change vs.{" "}
-          {prevQ} ({prevQDates}). Federal fiscal year runs Oct 1 – Sept 30,
-          named for the year it ends. Click any agency for its full history.
-        </figcaption>
-
-        <div className="mt-4 border-t border-stone-900 overflow-x-auto">
-          <table className="w-full min-w-[42rem]">
-            <thead className="border-b border-[--color-rule]">
-              <tr>
-                <th className="py-3 text-left font-display italic text-sm text-stone-700 w-12">
-                  Rank
-                </th>
-                <th className="py-3 text-left font-display italic text-sm text-stone-700">
-                  Agency
-                </th>
-                <th className="py-3 text-right font-display italic text-sm text-stone-700">
-                  Backlog ({periodLabel})
-                </th>
-                <th className="py-3 text-right font-display italic text-sm text-stone-700">
-                  vs. {prevQ}
-                </th>
-                <th className="hidden sm:table-cell py-3 text-left font-display italic text-sm text-stone-700 w-36 pl-4">
-                  Trend
-                </th>
-                <th className="hidden md:table-cell py-3 text-right font-display italic text-sm text-stone-700">
-                  Received
-                </th>
-                <th className="hidden md:table-cell py-3 text-right font-display italic text-sm text-stone-700">
-                  Processed
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => (
-                <tr
-                  key={row.agency}
-                  className="border-b border-[--color-rule] last:border-b-0 hover:bg-[--color-paper-deep]"
-                >
-                  <td className="py-3 text-stone-500 font-display italic text-sm">
-                    {i + 1}
-                  </td>
-                  <td className="py-3 pr-4">
-                    <Link
-                      href={`/agency/${row.slug}`}
-                      className="text-stone-900 hover:underline"
-                    >
-                      {row.agency}
-                    </Link>
-                  </td>
-                  <td className="py-3 text-right font-display text-lg text-stone-900 tabular-nums">
-                    {fmt(row.backlog_latest)}
-                  </td>
-                  <td
-                    className={`py-3 text-right font-display italic text-sm tabular-nums ${deltaColor(
-                      row.delta_pct
-                    )}`}
-                  >
-                    {fmtDelta(row.delta_pct)}
-                  </td>
-                  <td className="hidden sm:table-cell py-3 pl-4" style={{ color: sparkColor(row.delta_pct) }}>
-                    <Sparkline
-                      data={row.series}
-                      width={120}
-                      height={28}
-                      stroke={sparkColor(row.delta_pct)}
-                      markers={quarterlyMarkers()}
-                      ariaLabel={`Backlog trend for ${row.agency}`}
-                    />
-                  </td>
-                  <td className="hidden md:table-cell py-3 text-right font-display text-sm text-stone-600 tabular-nums">
-                    {fmt(row.received_latest)}
-                  </td>
-                  <td className="hidden md:table-cell py-3 text-right font-display text-sm text-stone-600 tabular-nums">
-                    {fmt(row.processed_latest)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <p className="font-display text-xs italic text-stone-600 mt-3 max-w-3xl leading-snug">
-          Source: FOIA.gov Quarterly Report API. {quarterlyRetrieved}
-          &ldquo;All agencies&rdquo; meta-row excluded. Trend covers up to
-          eight most recent quarters.{" "}
-          <a
-            href="/api/data/quarterly.csv"
-            className="underline hover:text-stone-800"
-            download
-          >
-            Download CSV
-          </a>{" "}
-          &middot;{" "}
-          <Link href="/annual" className="underline hover:text-stone-800">
-            See 17-year annual history
-          </Link>
-        </p>
-      </section>
-
-
-      {/* Wall of Shame */}
-      {wall.length > 0 && (
-        <section className="mx-auto max-w-5xl w-full px-6 mt-12">
-          <figcaption className="font-display italic text-stone-700 text-sm">
-            <span className="not-italic [font-variant-caps:small-caps] tracking-wider text-stone-900">
-              Wall of Shame.
-            </span>{" "}
-            The five oldest unanswered FOIA requests in the federal
-            government, drawn from every agency&rsquo;s top-10 oldest list
-            at end of FY{wall[0]?.fiscal_year} (Sept 30, {wall[0]?.fiscal_year}).
-            The longest has been pending since before the iPhone shipped.
-          </figcaption>
-          <ol className="mt-6 border-t border-stone-900">
-            {wall.map((r, i) => (
-              <li
-                key={`${r.agency}-${r.rank}`}
-                className="border-b border-[--color-rule] py-5 grid grid-cols-12 gap-4 items-baseline"
-              >
-                <span className="col-span-1 font-display italic text-stone-500 text-base">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <div className="col-span-7">
-                  <Link
-                    href={`/agency/${r.slug}`}
-                    className="font-display text-stone-900 text-xl md:text-2xl block hover:underline leading-tight"
-                  >
-                    {r.agency}
-                  </Link>
-                  <p className="text-stone-700 mt-1 text-sm font-display italic">
-                    Filed {fmtDate(r.date_received)} ·{" "}
-                    <span className="tabular-nums">
-                      {r.days_pending.toLocaleString()} days pending
-                    </span>
-                  </p>
-                </div>
-                <span className="col-span-4 font-display text-stone-900 text-3xl md:text-4xl tabular-nums text-right leading-none">
-                  {(r.days_pending / 365).toFixed(1)}
-                  <span className="text-base italic text-stone-500 ml-1">
-                    yrs
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ol>
-          <p className="font-display text-xs italic text-stone-600 mt-3 max-w-3xl leading-snug">
-            Source: FOIA.gov bulk Annual Report CSVs, FY{wall[0]?.fiscal_year}
-            ({fiscalYearDateRange(wall[0]?.fiscal_year ?? 2024)}).{" "}
-            {bulkRetrieved}{" "}
-            <a
-              href="/api/data/oldest-pending.csv"
-              className="underline hover:text-stone-800"
-              download
-            >
-              Download CSV
-            </a>
-          </p>
-        </section>
-      )}
 
 
       {/* Reading list */}

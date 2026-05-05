@@ -208,7 +208,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
               y={yLine(t)}
               textAnchor="end"
               dominantBaseline="middle"
-              fontSize={13}
+              fontSize={16}
               fill={COLOR_AXIS}
               fontFamily="ui-monospace, monospace"
             >
@@ -234,7 +234,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
               x={x(BIDEN_INAUG_X)}
               y={lineTop - 24}
               textAnchor="start"
-              fontSize={13}
+              fontSize={16}
               fill="#1e3a8a"
               fontFamily="ui-monospace, monospace"
               fontStyle="italic"
@@ -245,7 +245,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
               x={x(BIDEN_INAUG_X)}
               y={lineTop - 10}
               textAnchor="start"
-              fontSize={11}
+              fontSize={14}
               fill="#1e3a8a"
               fontFamily="ui-monospace, monospace"
             >
@@ -271,7 +271,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
               x={x(TRUMP_INAUG_X)}
               y={lineTop - 24}
               textAnchor="middle"
-              fontSize={13}
+              fontSize={16}
               fill="#7f1d1d"
               fontFamily="ui-monospace, monospace"
               fontStyle="italic"
@@ -282,7 +282,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
               x={x(TRUMP_INAUG_X)}
               y={lineTop - 10}
               textAnchor="middle"
-              fontSize={11}
+              fontSize={14}
               fill="#7f1d1d"
               fontFamily="ui-monospace, monospace"
             >
@@ -360,7 +360,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
           x={x(last.x) + 16}
           y={receivedLabelY + 14}
           dominantBaseline="middle"
-          fontSize={11}
+          fontSize={14}
           fill={COLOR_RECEIVED}
           fontFamily="ui-monospace, monospace"
         >
@@ -381,7 +381,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
           x={x(last.x) + 16}
           y={processedLabelY + 14}
           dominantBaseline="middle"
-          fontSize={11}
+          fontSize={14}
           fill={COLOR_PROCESSED}
           fontFamily="ui-monospace, monospace"
         >
@@ -393,7 +393,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
           x={PAD_LEFT - 10}
           y={lineTop - 42}
           textAnchor="start"
-          fontSize={13}
+          fontSize={16}
           fill={COLOR_INK}
           fontFamily="ui-monospace, monospace"
           fontStyle="italic"
@@ -404,7 +404,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
           x={PAD_LEFT - 10}
           y={lineTop - 24}
           textAnchor="start"
-          fontSize={11}
+          fontSize={14}
           fill={COLOR_AXIS}
           fontFamily="ui-monospace, monospace"
         >
@@ -431,7 +431,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
               y={yBar(t)}
               textAnchor="end"
               dominantBaseline="middle"
-              fontSize={13}
+              fontSize={16}
               fill={t === 0 ? COLOR_INK : COLOR_AXIS}
               fontFamily="ui-monospace, monospace"
               fontWeight={t === 0 ? 600 : 400}
@@ -445,7 +445,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
         <text
           x={W - PAD_RIGHT + 10}
           y={yBar(0) - 10}
-          fontSize={11}
+          fontSize={14}
           fill={COLOR_BAR_BAD}
           fontFamily="ui-monospace, monospace"
           fontStyle="italic"
@@ -455,7 +455,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
         <text
           x={W - PAD_RIGHT + 10}
           y={yBar(0) + 20}
-          fontSize={11}
+          fontSize={14}
           fill={COLOR_BAR_GOOD}
           fontFamily="ui-monospace, monospace"
           fontStyle="italic"
@@ -510,7 +510,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
               x={x(worst.x)}
               y={yBar(worst.net) - 8}
               textAnchor="middle"
-              fontSize={11}
+              fontSize={14}
               fill={COLOR_BAR_BAD}
               fontFamily="ui-monospace, monospace"
               fontStyle="italic"
@@ -535,7 +535,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
               x={x(last.x) + 16}
               y={yBar(last.net) - (last.net >= 0 ? 36 : -36)}
               textAnchor="start"
-              fontSize={13}
+              fontSize={16}
               fontWeight={700}
               fill={last.net >= 0 ? COLOR_BAR_BAD : COLOR_BAR_GOOD}
               fontFamily="ui-monospace, monospace"
@@ -546,7 +546,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
               x={x(last.x) + 16}
               y={yBar(last.net) - (last.net >= 0 ? 22 : -22)}
               textAnchor="start"
-              fontSize={11}
+              fontSize={14}
               fill={last.net >= 0 ? COLOR_BAR_BAD : COLOR_BAR_GOOD}
               fontFamily="ui-monospace, monospace"
               fontStyle="italic"
@@ -562,7 +562,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
             x={x(best.x)}
             y={yBar(best.net) + 18}
             textAnchor="middle"
-            fontSize={11}
+            fontSize={14}
             fontWeight={600}
             fill={COLOR_BAR_GOOD}
             fontFamily="ui-monospace, monospace"
@@ -576,7 +576,7 @@ export function ReceivedVsProcessedChart({ data }: Props) {
           x={PAD_LEFT - 10}
           y={barTop - 4}
           textAnchor="start"
-          fontSize={13}
+          fontSize={16}
           fill={COLOR_INK}
           fontFamily="ui-monospace, monospace"
           fontStyle="italic"

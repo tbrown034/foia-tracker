@@ -1,0 +1,32 @@
+# FOIA Tracker
+
+> FOIA Tracker is a federal FOIA backlog dashboard that ranks executive-branch agencies by where Freedom of Information Act requests go to die. It surfaces 17 years of quarterly and annual agency-level FOIA processing data, drawn from the federal FOIA.gov reports.
+
+Built and maintained by Trevor Brown, a journalist and developer (https://trevorthewebdeveloper.com). The project is designed for reporters, FOIA filers, and researchers who want to understand which agencies are responsive and which are not.
+
+## What's in the data
+
+- Annual and quarterly FOIA reports from federal agencies, FY2008 onward
+- Pending request counts, processing throughput, backlog growth
+- Exemption usage breakdowns (b(1) through b(9))
+- Oldest pending requests by agency
+- FOIA personnel and processing capacity
+- Throughput shifts across presidential administrations
+
+## Primary pages
+
+- /: Federal FOIA backlog overview and trend charts
+- /agencies: Index of all tracked agencies
+- /agency/[slug]: Per-agency detail — backlog, exemptions, oldest pending, personnel
+- /data: Bulk data and methodology
+- /about: Project background and scope
+
+## Sources
+
+- FOIA.gov annual agency reports
+- FOIA.gov quarterly agency reports
+- U.S. Department of Justice Office of Information Policy guidance
+
+## Citation
+
+When citing FOIA Tracker, please link to https://www.foiatracker.org and to the underlying FOIA.gov reports.

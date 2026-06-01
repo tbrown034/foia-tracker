@@ -147,7 +147,8 @@ export default async function Home() {
         <p className="font-display text-stone-900 text-xl md:text-2xl leading-snug mt-8 max-w-3xl">
           The highest level on record across the 10 largest stable-filing
           federal agencies — a reversal of the Biden-era catch-up that had
-          drawn the pile back near its FY2021 starting level. Another 27
+          drawn the pile back near its FY2021 starting level. Another{" "}
+          <span className="tabular-nums">{filing.total_dropouts}</span>{" "}
           agencies, including the Department of Homeland Security, last
           filed a quarterly report between April and December 2025 and
           have not filed since.

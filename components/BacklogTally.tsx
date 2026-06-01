@@ -28,8 +28,10 @@ export function BacklogTally({
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
-      setN(value);
-      return;
+      // Jump straight to the final value, but defer out of the effect body
+      // so we don't setState synchronously during the effect.
+      const jump = requestAnimationFrame(() => setN(value));
+      return () => cancelAnimationFrame(jump);
     }
     const start = performance.now();
     let raf = 0;

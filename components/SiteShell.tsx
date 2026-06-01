@@ -24,6 +24,23 @@ function quarterEndLabel(fy: number | null, q: number | null): string | null {
   return fiscalQuarterDateRange(fy, q as FiscalQuarter).split(" – ").at(-1) ?? null;
 }
 
+/** The quarter that follows the most recent one we hold — i.e. the next
+ *  data drop we're waiting on. Q4 rolls over into Q1 of the next FY. */
+function nextQuarter(
+  fy: number | null,
+  q: number | null
+): { fy: number; q: FiscalQuarter; endLabel: string; shortLabel: string } | null {
+  if (!fy || !q) return null;
+  const nf = q === 4 ? fy + 1 : fy;
+  const nq = (q === 4 ? 1 : q + 1) as FiscalQuarter;
+  return {
+    fy: nf,
+    q: nq,
+    endLabel: fiscalQuarterDateRange(nf, nq).split(" – ").at(-1) ?? "",
+    shortLabel: fiscalQuarterShort(nf, nq),
+  };
+}
+
 export async function SiteShell({ children }: { children: React.ReactNode }) {
   const freshness = await getSiteFreshness();
   const quarterLabel =
@@ -39,6 +56,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
   );
   const age = syncAgeDays(freshness.latest_sync_at);
   const isStale = age != null && age > 60;
+  const next = nextQuarter(freshness.quarterly_fy, freshness.quarterly_q);
 
   return (
     <div className="flex flex-col flex-1">
@@ -65,13 +83,22 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
             ))}
             <Link
               href="/about#freshness"
+              title={
+                next
+                  ? `Latest data the government has published (${
+                      quarterLabel ?? ""
+                    }). The next quarter, ${next.shortLabel} (through ${
+                      next.endLabel
+                    }), is typically filed about six weeks after it closes.`
+                  : "Latest data the government has published."
+              }
               className={`hidden md:inline-block rounded-sm border px-2.5 py-1 text-xs font-display italic tabular-nums ${
                 isStale
                   ? "border-stone-300 text-stone-600 bg-stone-50"
                   : "border-amber-300 text-stone-900 bg-amber-50"
               }`}
             >
-              {quarterEnd ? `Through ${quarterEnd}` : "Freshness unknown"}
+              {quarterEnd ? `Data through ${quarterEnd}` : "Freshness unknown"}
             </Link>
           </div>
         </nav>
@@ -88,6 +115,15 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
             Most recent quarterly: {quarterLabel ?? "unknown"}
             {quarterEnd ? `, through ${quarterEnd}` : ""}. Source data is
             self-reported by agencies and may be revised by DOJ.
+            {next ? (
+              <>
+                {" "}
+                <strong className="not-italic text-stone-900">Next:</strong>{" "}
+                {next.shortLabel} (through {next.endLabel}) is filed by
+                agencies roughly six weeks after the quarter closes; FY2025
+                annual reports are arriving now, agency by agency.
+              </>
+            ) : null}
           </div>
           <div className="mt-5 flex justify-between flex-wrap gap-3">
             <span>

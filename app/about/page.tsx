@@ -269,9 +269,11 @@ export default async function AboutPage() {
             Education has lost more than half of its full-time FOIA staff;
             HUD has lost 40% of its FOIA staff; the Defense Technical
             Information Center&rsquo;s FOIA staff has been reduced to zero.
-            DHS, OMB, and HHS had not filed their FY2025 annual FOIA
-            reports as of late April 2026, weeks past the March 1 statutory
-            deadline.
+            FY2025 annual FOIA reports, due March 1, 2026, only began
+            appearing in May — the Department of Justice is posting them
+            agency by agency, well past the statutory deadline. As of
+            May 31, 2026, agencies including the State Department, Treasury,
+            Labor, Commerce, Education, and Energy still had not filed.
           </p>
         </section>
 

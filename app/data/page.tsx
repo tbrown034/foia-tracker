@@ -36,7 +36,7 @@ const DATASETS: Dataset[] = [
     name: "Annual report — headline",
     description:
       "Per agency-component, per fiscal year: requests pending at start, received, processed, pending at end. The core long-term series.",
-    source: "FOIA.gov bulk Annual Report ZIPs (FY2008–FY2024)",
+    source: "FOIA.gov bulk Annual Report ZIPs (FY2008–FY2025)",
     columns: [
       "agency",
       "component",
@@ -193,7 +193,7 @@ export default async function DataPage() {
             </div>
             <div className="text-sm text-stone-500 mt-1">
               {bulkSync?.records?.toLocaleString() ?? "—"} rows ingested.
-              Bulk CSV ZIPs FY2008–FY2024.
+              Bulk CSV ZIPs FY2008–FY2025.
             </div>
           </div>
           <div className="border border-stone-200 rounded-lg p-5">

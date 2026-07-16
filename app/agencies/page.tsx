@@ -32,7 +32,9 @@ function sparkColor(pct: number | null): string {
 }
 
 export default async function AgenciesPage() {
-  const rows = await getAnnualRanking(50);
+  const { latest_fy: latestFy, prev_fy: prevFy, rows } =
+    await getAnnualRanking(50);
+  const spanYears = latestFy - 2008 + 1;
 
   return (
     <SiteShell>
@@ -42,10 +44,11 @@ export default async function AgenciesPage() {
         </h1>
         <p className="font-display italic text-stone-600 text-base md:text-lg mt-3 max-w-3xl">
           The 50 largest federal FOIA filers, ranked by pending requests
-          at the end of FY2024 (Sept 30, 2024) — the most recent year for
-          which annual data has been published. Tap any agency for its
-          full history. The sparkline shows 17 years of annual backlog
-          (FY2008–FY2024); for current quarterly figures, see{" "}
+          at the end of FY{latestFy} (Sept 30, {latestFy}) — the most
+          recent year for which annual data has been published. Tap any
+          agency for its full history. The sparkline shows {spanYears}{" "}
+          years of annual backlog (FY2008–FY{latestFy}); for current
+          quarterly figures, see{" "}
           <Link href="/" className="underline hover:text-stone-900">
             the home page
           </Link>
@@ -73,10 +76,10 @@ export default async function AgenciesPage() {
               <div className="mt-2 ml-9 grid grid-cols-3 gap-2 items-end">
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-stone-500">
-                    Pending FY24
+                    Pending FY{latestFy % 100}
                   </div>
                   <div className="font-mono tabular-nums text-stone-900 text-base">
-                    {fmt(row.pending_end_2024)}
+                    {fmt(row.pending_end_latest)}
                   </div>
                 </div>
                 <div>
@@ -98,7 +101,7 @@ export default async function AgenciesPage() {
                     height={24}
                     stroke={sparkColor(row.delta_pct)}
                     markers={annualMarkers()}
-                    ariaLabel={`17-year backlog trend for ${row.agency}`}
+                    ariaLabel={`${spanYears}-year backlog trend for ${row.agency}`}
                   />
                 </div>
               </div>
@@ -118,16 +121,16 @@ export default async function AgenciesPage() {
                   Agency
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-stone-600">
-                  Pending FY2024
+                  Pending FY{latestFy}
                 </th>
                 <th className="hidden md:table-cell px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-stone-600">
-                  Pending FY2023
+                  Pending FY{prevFy}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-stone-600">
                   YoY change
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-stone-600 w-44">
-                  17-year trend
+                  {spanYears}-year trend
                 </th>
               </tr>
             </thead>
@@ -149,10 +152,10 @@ export default async function AgenciesPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-stone-900 tabular-nums">
-                    {fmt(row.pending_end_2024)}
+                    {fmt(row.pending_end_latest)}
                   </td>
                   <td className="hidden md:table-cell px-4 py-3 text-right font-mono text-stone-500 tabular-nums">
-                    {fmt(row.pending_end_2023)}
+                    {fmt(row.pending_end_prev)}
                   </td>
                   <td
                     className={`px-4 py-3 text-right font-mono text-sm tabular-nums ${deltaColor(
@@ -168,7 +171,7 @@ export default async function AgenciesPage() {
                       height={32}
                       stroke={sparkColor(row.delta_pct)}
                       markers={annualMarkers()}
-                      ariaLabel={`17-year backlog trend for ${row.agency}`}
+                      ariaLabel={`${spanYears}-year backlog trend for ${row.agency}`}
                     />
                   </td>
                 </tr>
@@ -179,13 +182,12 @@ export default async function AgenciesPage() {
 
         <div className="mt-4 flex justify-between items-start flex-wrap gap-3 text-xs text-stone-500">
           <p className="max-w-3xl">
-            Source: FOIA.gov bulk Annual Report CSVs, FY2008–FY2024
-            (Oct 1, 2007 – Sept 30, 2024). Agency-level totals only.
+            Source: FOIA.gov bulk Annual Report CSVs, FY2008–FY{latestFy}{" "}
+            (Oct 1, 2007 – Sept 30, {latestFy}). Agency-level totals only.
             &ldquo;All agencies&rdquo; meta-row excluded. Vertical dashed
             lines on the sparkline mark presidential inaugurations: Obama
-            (Jan 20, 2009), Trump 1 (Jan 20, 2017), Biden (Jan 20, 2021).
-            Trump&rsquo;s second inauguration (Jan 20, 2025) lands in
-            FY2025 — shown on the home page.
+            (Jan 20, 2009), Trump 1 (Jan 20, 2017), Biden (Jan 20, 2021),
+            Trump 2 (Jan 20, 2025).
           </p>
           <a
             href="/api/data/annual.csv"

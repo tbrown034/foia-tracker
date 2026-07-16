@@ -12,7 +12,7 @@ if (!url) throw new Error("DATABASE_URL is not set");
 const sql = neon(url);
 
 const FIRST_YEAR = 2008;
-const LAST_YEAR = 2024;
+const LAST_YEAR = 2025;
 const RAW_DIR = resolve(process.cwd(), "data/raw");
 
 const ANNUAL_CSV = "foia-received-processed-and-pending-foia-requests.csv";

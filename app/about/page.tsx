@@ -35,6 +35,8 @@ export default async function AboutPage() {
     freshness.annual_fy != null && freshness.annual_fy >= 2025
       ? "present in the current database."
       : "not yet published in the current database. The Department of Justice Office of Information Policy is running late this year. We poll daily.";
+  const annualFy = freshness.annual_fy ?? 2025;
+  const annualSpanYears = annualFy - 2008 + 1;
 
   return (
     <SiteShell>
@@ -122,8 +124,8 @@ export default async function AboutPage() {
           <h2 className="font-display text-2xl text-stone-900">Data sources</h2>
           <ul className="mt-3 space-y-3 text-stone-700">
             <li>
-              <strong>Annual Report bulk CSVs</strong> — FY2008 through FY2024
-              (Oct 1, 2007 – Sept 30, 2024), downloaded from{" "}
+              <strong>Annual Report bulk CSVs</strong> — FY2008 through FY
+              {annualFy} (Oct 1, 2007 – Sept 30, {annualFy}), downloaded from{" "}
               <a
                 href="https://www.foia.gov/foia-dataset-download.html"
                 className="underline hover:text-stone-900"
@@ -191,8 +193,9 @@ export default async function AboutPage() {
             not inferred values.
           </p>
           <p className="text-stone-700 mt-3">
-            The 17-year annual view uses FY2008 through FY2024 bulk annual
-            CSVs. Quarterly &ldquo;backlog&rdquo; and annual
+            The {annualSpanYears}-year annual view uses FY2008 through FY
+            {annualFy} bulk annual CSVs. Quarterly &ldquo;backlog&rdquo; and
+            annual
             &ldquo;pending&rdquo; are intentionally kept on separate views
             because FOIA.gov defines them differently.
           </p>
@@ -203,12 +206,11 @@ export default async function AboutPage() {
             Agencies that have stopped filing
           </h2>
           <p className="text-stone-700 mt-3">
-            27 federal agencies that had been reporting quarterly FOIA
+            23 federal agencies that had been reporting quarterly FOIA
             data last did so between April and December 2025 and have
-            not filed since. None of them filed FY2026 Q2 (Jan–Mar
-            2026). The list, grouped by the last quarter each agency
-            filed, with their FY2024 average requests received per
-            quarter where available:
+            not filed since, through FY2026 Q2 (Jan–Mar 2026). The list,
+            grouped by the last quarter each agency filed, with their
+            FY2024 average requests received per quarter where available:
           </p>
           <h3 className="text-sm font-display [font-variant-caps:small-caps] tracking-wider text-stone-900 mt-5">
             Last filed FY2025 Q3 (April–June 2025)
@@ -225,25 +227,20 @@ export default async function AboutPage() {
           <ul className="text-sm text-stone-700 mt-2 space-y-1">
             <li>Department of Veterans Affairs (~23,774/q)</li>
             <li>Small Business Administration (~1,318/q)</li>
-            <li>General Services Administration (~387/q)</li>
             <li>National Railroad Passenger Corporation (~187/q)</li>
-            <li>Office of the United States Trade Representative (~34/q)</li>
             <li>Office of National Drug Control Policy (~23/q)</li>
-            <li>United States Trade and Development Agency (~20/q)</li>
             <li>Millennium Challenge Corporation (~18/q)</li>
             <li>Office of the Intellectual Property Enforcement Coordinator (~11/q)</li>
             <li>National Capital Planning Commission (~9/q)</li>
-            <li>Office of Science and Technology Policy (~54/q)</li>
           </ul>
           <h3 className="text-sm font-display [font-variant-caps:small-caps] tracking-wider text-stone-900 mt-5">
             Last filed FY2026 Q1 (October–December 2025)
           </h3>
           <ul className="text-sm text-stone-700 mt-2 space-y-1">
+            <li>National Archives and Records Administration (~14,179/q)</li>
             <li>U.S. Department of State (~5,473/q)</li>
-            <li>Department of Agriculture (~4,242/q)</li>
             <li>Consumer Financial Protection Bureau (~244/q)</li>
             <li>Office of Personnel Management (~242/q)</li>
-            <li>Consumer Product Safety Commission (~196/q)</li>
             <li>Council on Environmental Quality (~105/q)</li>
             <li>Office of the Director of National Intelligence (~103/q)</li>
             <li>Office of Special Counsel (~61/q)</li>
@@ -251,7 +248,21 @@ export default async function AboutPage() {
             <li>Federal Energy Regulatory Commission (~33/q)</li>
             <li>Inter-American Foundation (~13/q)</li>
             <li>United States Access Board (~10/q)</li>
+            <li>James Madison Memorial Fellowship Foundation (no FY2024 baseline)</li>
           </ul>
+          <p className="text-stone-700 mt-5">
+            Six agencies that had gone dark for one or more quarters
+            resumed filing with FY2026 Q2: the Department of Agriculture,
+            the General Services Administration, the Consumer Product
+            Safety Commission, the Office of the United States Trade
+            Representative, the U.S. Trade and Development Agency, and the
+            Office of Science and Technology Policy. In the other
+            direction, the National Archives and Records Administration —
+            a top-ten FOIA agency at roughly 14,000 requests received per
+            quarter in FY2024 — and the James Madison Memorial Fellowship
+            Foundation have no FY2026 Q2 report in the current FOIA.gov
+            data; FY2026 Q1 is their most recent filing.
+          </p>
           <p className="text-stone-700 mt-5 leading-relaxed">
             Outside reporting from{" "}
             <a
@@ -270,10 +281,13 @@ export default async function AboutPage() {
             HUD has lost 40% of its FOIA staff; the Defense Technical
             Information Center&rsquo;s FOIA staff has been reduced to zero.
             FY2025 annual FOIA reports, due March 1, 2026, only began
-            appearing in May — the Department of Justice is posting them
-            agency by agency, well past the statutory deadline. As of
-            May 31, 2026, agencies including the State Department, Treasury,
-            Labor, Commerce, Education, and Energy still had not filed.
+            appearing in May 2026 — months past the statutory deadline.
+            The June 9, 2026 bulk publication brought in most of the
+            holdouts, including State, Treasury, Labor, Commerce,
+            Education, and Energy. Six smaller entities — among them the
+            U.S. Institute of Peace and the Council of the Inspectors
+            General on Integrity and Efficiency — still had no FY2025
+            annual report as of July 2026.
           </p>
         </section>
 

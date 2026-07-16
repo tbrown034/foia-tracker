@@ -48,9 +48,16 @@ export default async function AgencyPage({
   const detail = await getAgencyDetail(slug);
   if (!detail) notFound();
 
+  // The agency's own most recent annual report year — a handful of small
+  // agencies have not filed FY2025, so this is per-agency, not sitewide.
+  const latestAnnualFy =
+    detail.annual.length > 0
+      ? detail.annual[detail.annual.length - 1].fiscal_year
+      : 2025;
+
   const [oldestPending, exemptions, personnel] = await Promise.all([
-    getAgencyOldestPending(detail.agency, 2024),
-    getAgencyExemptions(detail.agency, 2024),
+    getAgencyOldestPending(detail.agency, latestAnnualFy),
+    getAgencyExemptions(detail.agency, latestAnnualFy),
     getAgencyPersonnel(detail.agency),
   ]);
 
@@ -261,7 +268,8 @@ export default async function AgencyPage({
         {oldestPending.length > 0 && (
           <section className="mt-10">
             <h2 className="font-display text-2xl text-stone-900">
-              10 oldest pending requests, end of FY2024 (Sept 30, 2024)
+              10 oldest pending requests, end of FY{latestAnnualFy} (Sept 30,{" "}
+              {latestAnnualFy})
             </h2>
             <p className="text-sm text-stone-600 mt-1">
               Days pending counts forward from the day the request was
@@ -320,7 +328,8 @@ export default async function AgencyPage({
         {exemptions.length > 0 && (
           <section className="mt-10">
             <h2 className="font-display text-2xl text-stone-900">
-              Exemption invocations, FY2024 (Oct 1, 2023 – Sept 30, 2024)
+              Exemption invocations, FY{latestAnnualFy} (
+              {fiscalYearDateRange(latestAnnualFy)})
             </h2>
             <p className="text-sm text-stone-600 mt-1">
               How often each FOIA exemption (b1–b9) was invoked when
@@ -439,7 +448,7 @@ export default async function AgencyPage({
                 className="text-stone-700 underline hover:text-stone-900"
                 download
               >
-                Annual report headline (FY2008–FY2024)
+                Annual report headline (FY2008–FY2025)
               </a>
             </li>
             <li>

@@ -110,24 +110,40 @@ export async function getLatestSync(): Promise<FreshnessRow | null> {
 export type AnnualRankRow = {
   agency: string;
   slug: string;
-  pending_end_2024: number | null;
-  pending_end_2023: number | null;
+  pending_end_latest: number | null;
+  pending_end_prev: number | null;
   delta_pct: number | null;
   series: { x: number; y: number | null }[];
 };
 
-export async function getAnnualRanking(limit: number = 25): Promise<AnnualRankRow[]> {
+export type AnnualRanking = {
+  /** Most recent fiscal year present in foia_annual. */
+  latest_fy: number;
+  prev_fy: number;
+  rows: AnnualRankRow[];
+};
+
+export async function getAnnualRanking(limit: number = 25): Promise<AnnualRanking> {
+  const fyRows = (await sql`
+    SELECT MAX(fiscal_year)::int AS fy
+    FROM foia_annual
+    WHERE component = 'Agency Overall' AND agency <> 'All agencies'
+  `) as { fy: number | null }[];
+  const latestFy = fyRows[0]?.fy;
+  if (!latestFy) return { latest_fy: 0, prev_fy: 0, rows: [] };
+  const prevFy = latestFy - 1;
+
   const summary = (await sql`
     SELECT
       agency,
-      MAX(CASE WHEN fiscal_year = 2024 THEN pending_end END)::int AS pending_end_2024,
-      MAX(CASE WHEN fiscal_year = 2023 THEN pending_end END)::int AS pending_end_2023,
+      MAX(CASE WHEN fiscal_year = ${latestFy} THEN pending_end END)::int AS pending_end_latest,
+      MAX(CASE WHEN fiscal_year = ${prevFy} THEN pending_end END)::int AS pending_end_prev,
       CASE
-        WHEN MAX(CASE WHEN fiscal_year = 2023 THEN pending_end END) > 0
+        WHEN MAX(CASE WHEN fiscal_year = ${prevFy} THEN pending_end END) > 0
         THEN ROUND(
-          (MAX(CASE WHEN fiscal_year = 2024 THEN pending_end END)::numeric
-            - MAX(CASE WHEN fiscal_year = 2023 THEN pending_end END))
-          / MAX(CASE WHEN fiscal_year = 2023 THEN pending_end END) * 100,
+          (MAX(CASE WHEN fiscal_year = ${latestFy} THEN pending_end END)::numeric
+            - MAX(CASE WHEN fiscal_year = ${prevFy} THEN pending_end END))
+          / MAX(CASE WHEN fiscal_year = ${prevFy} THEN pending_end END) * 100,
           1
         )::float
         ELSE NULL
@@ -135,12 +151,12 @@ export async function getAnnualRanking(limit: number = 25): Promise<AnnualRankRo
     FROM foia_annual
     WHERE component = 'Agency Overall' AND agency <> 'All agencies'
     GROUP BY agency
-    HAVING MAX(CASE WHEN fiscal_year = 2024 THEN pending_end END) IS NOT NULL
-    ORDER BY pending_end_2024 DESC NULLS LAST
+    HAVING MAX(CASE WHEN fiscal_year = ${latestFy} THEN pending_end END) IS NOT NULL
+    ORDER BY pending_end_latest DESC NULLS LAST
     LIMIT ${limit}
   `) as Omit<AnnualRankRow, "slug" | "series">[];
 
-  if (summary.length === 0) return [];
+  if (summary.length === 0) return { latest_fy: latestFy, prev_fy: prevFy, rows: [] };
 
   const agencies = summary.map((r) => r.agency);
   const series = (await sql`
@@ -158,11 +174,15 @@ export async function getAnnualRanking(limit: number = 25): Promise<AnnualRankRo
     seriesByAgency.set(row.agency, arr);
   }
 
-  return summary.map((r) => ({
-    ...r,
-    slug: slugify(r.agency),
-    series: seriesByAgency.get(r.agency) ?? [],
-  }));
+  return {
+    latest_fy: latestFy,
+    prev_fy: prevFy,
+    rows: summary.map((r) => ({
+      ...r,
+      slug: slugify(r.agency),
+      series: seriesByAgency.get(r.agency) ?? [],
+    })),
+  };
 }
 
 // ---------- Quarterly ----------
@@ -888,10 +908,11 @@ export type BridgedTimeline = {
 
 /**
  * Total federal FOIA pending across every agency, with annual values
- * FY2008-FY2024 and quarterly values from FY2025 Q1 onward (so the
- * series don't overlap). Both segments use end-of-period decimal years
- * for the x-axis, so the chart reads as one continuous timeline even
- * though the metric definitions differ slightly.
+ * through the most recent annual FY and quarterly values from that FY's
+ * Q4 onward (the shared end-of-September point bridges the two series).
+ * Both segments use end-of-period decimal years for the x-axis, so the
+ * chart reads as one continuous timeline even though the metric
+ * definitions differ slightly.
  */
 export async function getBridgedTimeline(): Promise<BridgedTimeline> {
   const annualRows = (await sql`
@@ -904,13 +925,17 @@ export async function getBridgedTimeline(): Promise<BridgedTimeline> {
     ORDER BY fiscal_year
   `) as { fiscal_year: number; total: number | null }[];
 
+  const latestAnnualFy =
+    annualRows.length > 0 ? annualRows[annualRows.length - 1].fiscal_year : 0;
+
   const quarterlyRows = (await sql`
     SELECT fiscal_year, fiscal_quarter, SUM(backlog)::int AS total
     FROM foia_quarterly
     WHERE component = 'Agency Overall'
       AND agency <> 'All agencies'
       AND backlog IS NOT NULL
-      AND (fiscal_year > 2024 OR (fiscal_year = 2024 AND fiscal_quarter = 4))
+      AND (fiscal_year > ${latestAnnualFy}
+        OR (fiscal_year = ${latestAnnualFy} AND fiscal_quarter = 4))
     GROUP BY fiscal_year, fiscal_quarter
     ORDER BY fiscal_year, fiscal_quarter
   `) as {
@@ -1252,7 +1277,7 @@ export async function getAgencyDetail(slug: string): Promise<AgencyDetail | null
 
 export async function getAgencyOldestPending(
   agency: string,
-  fiscalYear: number = 2024
+  fiscalYear: number
 ): Promise<OldestPendingRow[]> {
   const rows = (await sql`
     SELECT rank, date_received::text AS date_received, days_pending::int AS days_pending
@@ -1267,7 +1292,7 @@ export async function getAgencyOldestPending(
 
 export async function getAgencyExemptions(
   agency: string,
-  fiscalYear: number = 2024
+  fiscalYear: number
 ): Promise<ExemptionRow[]> {
   const rows = (await sql`
     SELECT exemption, invocations::int AS invocations

@@ -84,6 +84,13 @@ export default async function Home() {
     getLatestSyncByEachSource(),
   ]);
   const syncBySource = new Map(syncs.map((s) => [s.source, s]));
+  // Agencies whose last quarterly filing falls in the Trump 2 reporting
+  // cliff (FY2025 Q3 through FY2026 Q1 = April to December 2025). Distinct
+  // from filing.total_dropouts, which is the net loss from the peak filer
+  // count and also reflects agencies that dropped before the cliff.
+  const cliffDropoutCount = filing.points
+    .filter((p) => (p.fy === 2025 && p.q >= 3) || (p.fy === 2026 && p.q === 1))
+    .reduce((s, p) => s + p.dropouts.length, 0);
   const quarterlyRetrieved = retrievedLabel(
     syncBySource.get("quarterly-api")?.ended_at ?? null
   );
@@ -126,6 +133,31 @@ export default async function Home() {
       })
     : "—";
 
+  // When the next quarterly drop should land: agencies file roughly six
+  // weeks after a quarter closes. Derived from the most recent quarter we
+  // hold so the footnote rolls forward on its own.
+  const nextQ = period
+    ? period.q === 4
+      ? { fy: period.fy + 1, q: 1 as FiscalQuarter }
+      : { fy: period.fy, q: (period.q + 1) as FiscalQuarter }
+    : null;
+  const nextQEndIso = nextQ ? fiscalQuarterISORange(nextQ.fy, nextQ.q).end : null;
+  const nextQExpectedLabel = nextQEndIso
+    ? new Date(
+        new Date(nextQEndIso + "T00:00:00").getTime() + 42 * 24 * 60 * 60 * 1000
+      ).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    : null;
+  const heroFootnote =
+    nextQ && nextQExpectedLabel
+      ? `This is the newest quarter agencies have filed. New data lands on a lag — quarterly reports arrive roughly six weeks after a quarter closes, so ${fiscalQuarterShort(
+          nextQ.fy,
+          nextQ.q
+        )} (${fiscalQuarterDateRange(
+          nextQ.fy,
+          nextQ.q
+        )}) is expected around mid-${nextQExpectedLabel}. Annual reports run further behind: FY2025 published in June 2026.`
+      : undefined;
+
   return (
     <SiteShell>
       <article className="mx-auto max-w-5xl w-full px-6 pt-10 md:pt-14 pb-6">
@@ -140,6 +172,7 @@ export default async function Home() {
               asOf={periodEndLabel}
               unitLine="pending federal FOIA requests"
               sourceLine={`Across the 10 largest stable-filing agencies · ${periodLabel} · FOIA.gov quarterly reports`}
+              footnote={heroFootnote}
             />
           </div>
         )}
@@ -148,7 +181,7 @@ export default async function Home() {
           The highest level on record across the 10 largest stable-filing
           federal agencies — a reversal of the Biden-era catch-up that had
           drawn the pile back near its FY2021 starting level. Another{" "}
-          <span className="tabular-nums">{filing.total_dropouts}</span>{" "}
+          <span className="tabular-nums">{cliffDropoutCount}</span>{" "}
           agencies, including the Department of Homeland Security, last
           filed a quarterly report between April and December 2025 and
           have not filed since.
@@ -226,7 +259,7 @@ export default async function Home() {
               Why some agencies are missing
             </div>
             <p className="text-sm text-stone-700 leading-relaxed">
-              <span className="tabular-nums">{filing.total_dropouts}</span>{" "}
+              <span className="tabular-nums">{cliffDropoutCount}</span>{" "}
               federal agencies that had been filing quarterly FOIA reports
               last did so between April and December 2025 and have not
               filed since. The largest, by volume, is the Department of
@@ -234,10 +267,11 @@ export default async function Home() {
               FOIA filer at roughly 225,000 requests per quarter — whose
               last filing was{" "}
               <span className="not-italic">FY2025 Q3 (April–June 2025)</span>. Other notable absences include the Department
-              of Veterans Affairs, the State Department, the Department of
-              Agriculture, the Office of Personnel Management, the Office
-              of the Director of National Intelligence, and the Office of
-              Management and Budget. Outside reporting from{" "}
+              of Veterans Affairs, the State Department, the National
+              Archives and Records Administration, the Office of Personnel
+              Management, the Office of the Director of National
+              Intelligence, and the Office of Management and Budget.
+              Outside reporting from{" "}
               <a
                 href="https://notus.org/trump-white-house/trump-administration-dismantling-foia"
                 className="underline hover:text-stone-900"
@@ -411,7 +445,7 @@ export default async function Home() {
               <p className="text-sm text-stone-600 mt-1">
                 Department of Justice Office of Information Policy. The
                 source of every number on this page. Bulk Annual Report
-                ZIPs, FY2008 through FY2024 (Oct 1, 2007 – Sept 30, 2024).
+                ZIPs, FY2008 through FY2025 (Oct 1, 2007 – Sept 30, 2025).
               </p>
             </a>
           </li>

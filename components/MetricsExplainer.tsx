@@ -31,8 +31,8 @@ export function MetricsExplainer({
               <strong>Window:</strong> full fiscal year, Oct 1 through Sept 30.
             </li>
             <li>
-              <strong>Coverage:</strong> every federal agency. ~122 agencies in
-              FY2024.
+              <strong>Coverage:</strong> every federal agency. 117 agencies
+              filed for FY2025 so far.
             </li>
             <li>
               <strong>Detail:</strong> received, processed, pending, exemption
@@ -43,8 +43,8 @@ export function MetricsExplainer({
               open at year-end, regardless of age.
             </li>
             <li>
-              <strong>Freshness:</strong> ~6 months after fiscal year end.
-              Latest published is FY2024.
+              <strong>Freshness:</strong> six to nine months after fiscal
+              year end. Latest published is FY2025.
             </li>
           </ul>
         </div>

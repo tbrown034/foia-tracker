@@ -57,6 +57,13 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
   const age = syncAgeDays(freshness.latest_sync_at);
   const isStale = age != null && age > 60;
   const next = nextQuarter(freshness.quarterly_fy, freshness.quarterly_q);
+  const syncedLabel = freshness.latest_sync_at
+    ? new Date(freshness.latest_sync_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null;
 
   return (
     <div className="flex flex-col flex-1">
@@ -89,7 +96,11 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                       quarterLabel ?? ""
                     }). The next quarter, ${next.shortLabel} (through ${
                       next.endLabel
-                    }), is typically filed about six weeks after it closes.`
+                    }), is typically filed about six weeks after it closes.${
+                      syncedLabel
+                        ? ` Last pulled from FOIA.gov ${syncedLabel}.`
+                        : ""
+                    }`
                   : "Latest data the government has published."
               }
               className={`hidden md:inline-block rounded-sm border px-2.5 py-1 text-xs font-display italic tabular-nums ${
@@ -99,6 +110,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
               }`}
             >
               {quarterEnd ? `Data through ${quarterEnd}` : "Freshness unknown"}
+              {quarterEnd && syncedLabel ? ` · updated ${syncedLabel}` : ""}
             </Link>
           </div>
         </nav>
@@ -113,15 +125,16 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
             Most recent annual:{" "}
             {freshness.annual_fy ? `FY${freshness.annual_fy}` : "unknown"}.
             Most recent quarterly: {quarterLabel ?? "unknown"}
-            {quarterEnd ? `, through ${quarterEnd}` : ""}. Source data is
-            self-reported by agencies and may be revised by DOJ.
+            {quarterEnd ? `, through ${quarterEnd}` : ""}.
+            {syncedLabel ? ` Last pulled from FOIA.gov ${syncedLabel}.` : ""}{" "}
+            Source data is self-reported by agencies and may be revised by
+            DOJ.
             {next ? (
               <>
                 {" "}
                 <strong className="not-italic text-stone-900">Next:</strong>{" "}
                 {next.shortLabel} (through {next.endLabel}) is filed by
-                agencies roughly six weeks after the quarter closes; FY2025
-                annual reports are arriving now, agency by agency.
+                agencies roughly six weeks after the quarter closes.
               </>
             ) : null}
           </div>

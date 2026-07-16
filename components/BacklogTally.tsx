@@ -7,6 +7,8 @@ type Props = {
   asOf: string;
   unitLine: string;
   sourceLine: string;
+  /** Optional asterisk footnote explaining the as-of date. */
+  footnote?: string;
   durationMs?: number;
 };
 
@@ -19,6 +21,7 @@ export function BacklogTally({
   asOf,
   unitLine,
   sourceLine,
+  footnote,
   durationMs = 1800,
 }: Props) {
   const [n, setN] = useState(0);
@@ -54,11 +57,19 @@ export function BacklogTally({
       </div>
       <p className="mt-4 font-display text-stone-700 text-base md:text-lg leading-snug">
         {unitLine}{" "}
-        <span className="text-stone-900">as of {asOf}</span>
+        <span className="text-stone-900">
+          as of {asOf}
+          {footnote ? <sup aria-hidden="true">*</sup> : null}
+        </span>
       </p>
       <p className="mt-1 font-display italic text-stone-500 text-xs md:text-sm">
         {sourceLine}
       </p>
+      {footnote ? (
+        <p className="mt-3 font-display italic text-stone-500 text-xs md:text-sm max-w-2xl leading-snug">
+          * {footnote}
+        </p>
+      ) : null}
     </div>
   );
 }

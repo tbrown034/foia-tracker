@@ -331,6 +331,14 @@ export default async function AboutPage() {
               monthly.
             </li>
             <li>
+              Ten-oldest &ldquo;days pending&rdquo; are working days, as
+              agencies report them. Where an agency&rsquo;s reported days
+              exceed the calendar days since its own received date — a
+              reporting error; OPM&rsquo;s FY2025 filing contains one — we
+              exclude the row from cross-agency superlatives but still show
+              it on the agency&rsquo;s own page.
+            </li>
+            <li>
               The FY2016 bulk ZIP ships two CSVs for the headline section —
               the canonical file and a stray FY2018 file. We prefer the
               canonical file by name. (See{" "}

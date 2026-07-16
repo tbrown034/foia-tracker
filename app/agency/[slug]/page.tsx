@@ -25,6 +25,24 @@ function fmt(n: number | null): string {
   return n.toLocaleString();
 }
 
+/** Calendar years a request has been pending as of the reporting fiscal
+ *  year's end. Prefers the received date; falls back to converting the
+ *  agency-reported working days (~261 per year). */
+function yearsPending(
+  dateReceived: string | null,
+  daysPending: number | null,
+  fiscalYear: number
+): string {
+  if (dateReceived) {
+    const end = new Date(`${fiscalYear}-09-30T00:00:00`).getTime();
+    const start = new Date(`${dateReceived}T00:00:00`).getTime();
+    const years = (end - start) / (365.25 * 24 * 60 * 60 * 1000);
+    if (Number.isFinite(years) && years > 0) return years.toFixed(1);
+  }
+  if (daysPending != null) return (daysPending / 261).toFixed(1);
+  return "—";
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -272,9 +290,10 @@ export default async function AgencyPage({
               {latestAnnualFy})
             </h2>
             <p className="text-sm text-stone-600 mt-1">
-              Days pending counts forward from the day the request was
-              received. The longer this list runs, the more litigation-ripe
-              the agency&rsquo;s backlog.
+              Agencies report days pending in working days, counted from
+              the day the request was received; the years column converts
+              to calendar years. The longer this list runs, the more
+              litigation-ripe the agency&rsquo;s backlog.
             </p>
             <div className="mt-4 border border-stone-200 rounded-lg overflow-hidden">
               <table className="w-full">
@@ -287,7 +306,7 @@ export default async function AgencyPage({
                       Date received
                     </th>
                     <th className="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wide text-stone-600">
-                      Days pending
+                      Working days pending
                     </th>
                     <th className="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wide text-stone-600">
                       Years pending
@@ -312,9 +331,7 @@ export default async function AgencyPage({
                           : "—"}
                       </td>
                       <td className="px-4 py-2 text-right font-mono text-sm tabular-nums text-stone-500">
-                        {r.days_pending != null
-                          ? (r.days_pending / 365).toFixed(1)
-                          : "—"}
+                        {yearsPending(r.date_received, r.days_pending, latestAnnualFy)}
                       </td>
                     </tr>
                   ))}

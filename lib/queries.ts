@@ -710,6 +710,11 @@ export async function getHomeCallouts(): Promise<HomeCallouts> {
     WHERE component = 'Agency Overall'
       AND fiscal_year = (SELECT MAX(fiscal_year) FROM foia_oldest_pending WHERE component = 'Agency Overall')
       AND days_pending IS NOT NULL
+      -- Reported days pending are working days, so they can never exceed
+      -- the calendar days elapsed by fiscal year end. Filters agency
+      -- reporting errors (e.g. OPM's FY2025 8,651-day entry dated 2022).
+      AND (date_received IS NULL
+        OR days_pending <= make_date(fiscal_year, 9, 30) - date_received)
     ORDER BY days_pending DESC
     LIMIT 1
   `) as { agency: string; days: number; date_received: string | null }[];
@@ -1073,7 +1078,7 @@ export async function getEditorialStats(topN: number = 25): Promise<EditorialSta
     WHERE w.received > w.processed
   `) as { n: number }[];
 
-  // DOJ's oldest pending request (FY2024 reporting)
+  // DOJ's oldest pending request (latest annual reporting)
   const doj = (await sql`
     SELECT date_received::text AS date_received, days_pending::int AS days_pending
     FROM foia_oldest_pending
@@ -1084,6 +1089,8 @@ export async function getEditorialStats(topN: number = 25): Promise<EditorialSta
         WHERE agency = 'Department of Justice' AND component = 'Agency Overall'
       )
       AND days_pending IS NOT NULL
+      AND (date_received IS NULL
+        OR days_pending <= make_date(fiscal_year, 9, 30) - date_received)
     ORDER BY days_pending DESC
     LIMIT 1
   `) as { date_received: string | null; days_pending: number | null }[];
@@ -1098,6 +1105,8 @@ export async function getEditorialStats(topN: number = 25): Promise<EditorialSta
         SELECT MAX(fiscal_year) FROM foia_oldest_pending WHERE component = 'Agency Overall'
       )
       AND days_pending IS NOT NULL
+      AND (date_received IS NULL
+        OR days_pending <= make_date(fiscal_year, 9, 30) - date_received)
     ORDER BY days_pending DESC
     LIMIT 1
   `) as { agency: string; date_received: string | null; days_pending: number | null }[];
@@ -1200,6 +1209,8 @@ export async function getWallOfShame(limit: number = 5): Promise<WallOfShameRow[
       AND fiscal_year = (SELECT MAX(fiscal_year) FROM foia_oldest_pending WHERE component = 'Agency Overall')
       AND days_pending IS NOT NULL
       AND agency <> 'All agencies'
+      AND (date_received IS NULL
+        OR days_pending <= make_date(fiscal_year, 9, 30) - date_received)
     ORDER BY days_pending DESC
     LIMIT ${limit}
   `) as Omit<WallOfShameRow, "slug">[];

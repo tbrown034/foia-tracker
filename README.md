@@ -6,12 +6,14 @@ FOIA Tracker normalizes public FOIA.gov annual and quarterly datasets into a que
 
 ## Data
 
-- Annual bulk CSVs: FY2008 through FY2024.
-- Quarterly FOIA Report API: freshest published quarter in the seeded dataset.
-- Agency Components API: canonical agency naming.
-- Annual report XML: reserved for deeper component-level work.
+- Annual bulk CSVs: FY2008 through FY2025. The current FY2025 release contains 117 agency-overall reports.
+- Quarterly FOIA Report API: FY2021 Q1 through FY2026 Q2, the latest substantially filled quarter in the database.
+
+FOIA.gov also publishes Agency Components and annual XML APIs. The current pipeline does not ingest either source.
 
 All source data is public domain US government data from FOIA.gov. Agency numbers are self-reported and can be revised by DOJ.
+
+Syncs are run manually after the source release and filing coverage are checked. The site shows the source period and last successful pull date; no automated cron is running.
 
 ## Local Development
 

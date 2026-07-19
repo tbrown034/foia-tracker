@@ -185,6 +185,165 @@ export async function getAnnualRanking(limit: number = 25): Promise<AnnualRankin
   };
 }
 
+export type AnnualAgencyFinding = {
+  agency: string;
+  slug: string;
+  received_latest: number | null;
+  pending_latest: number | null;
+  pending_prev: number | null;
+  staff_latest: number | null;
+  staff_prev: number | null;
+  staff_change_pct: number | null;
+  pending_change_pct: number | null;
+  first_over_million: boolean;
+};
+
+export type AnnualFindings = {
+  latest_fy: number;
+  prev_fy: number;
+  latest_filers: number;
+  prev_filers: number;
+  received_latest: number | null;
+  received_prev: number | null;
+  pending_latest: number | null;
+  pending_prev: number | null;
+  received_change_pct: number | null;
+  pending_change_pct: number | null;
+  received_is_series_high: boolean;
+  pending_is_series_high: boolean;
+  homeland_security: AnnualAgencyFinding | null;
+  veterans_affairs: AnnualAgencyFinding | null;
+};
+
+/**
+ * Editorial facts from the two newest annual reports. Every percentage is
+ * computed from agency-overall rows in the same bulk source so home-page copy
+ * stays apples-to-apples as the database advances.
+ */
+export async function getAnnualFindings(): Promise<AnnualFindings | null> {
+  const totals = (await sql`
+    WITH annual_totals AS (
+      SELECT
+        fiscal_year,
+        COUNT(*)::int AS filers,
+        SUM(received)::int AS received,
+        SUM(pending_end)::int AS pending
+      FROM foia_annual
+      WHERE component = 'Agency Overall'
+        AND agency <> 'All agencies'
+      GROUP BY fiscal_year
+    ), periods AS (
+      SELECT
+        MAX(fiscal_year)::int AS latest_fy,
+        (
+          SELECT MAX(fiscal_year)::int
+          FROM annual_totals
+          WHERE fiscal_year < (SELECT MAX(fiscal_year) FROM annual_totals)
+        ) AS prev_fy
+      FROM annual_totals
+    )
+    SELECT
+      latest.fiscal_year::int AS latest_fy,
+      previous.fiscal_year::int AS prev_fy,
+      latest.filers::int AS latest_filers,
+      previous.filers::int AS prev_filers,
+      latest.received::int AS received_latest,
+      previous.received::int AS received_prev,
+      latest.pending::int AS pending_latest,
+      previous.pending::int AS pending_prev,
+      CASE WHEN previous.received > 0
+        THEN ROUND((latest.received::numeric - previous.received) / previous.received * 100, 1)::float
+        ELSE NULL
+      END AS received_change_pct,
+      CASE WHEN previous.pending > 0
+        THEN ROUND((latest.pending::numeric - previous.pending) / previous.pending * 100, 1)::float
+        ELSE NULL
+      END AS pending_change_pct,
+      latest.received = (SELECT MAX(received) FROM annual_totals) AS received_is_series_high,
+      latest.pending = (SELECT MAX(pending) FROM annual_totals) AS pending_is_series_high
+    FROM periods
+    JOIN annual_totals latest ON latest.fiscal_year = periods.latest_fy
+    JOIN annual_totals previous ON previous.fiscal_year = periods.prev_fy
+  `) as {
+    latest_fy: number;
+    prev_fy: number;
+    latest_filers: number;
+    prev_filers: number;
+    received_latest: number | null;
+    received_prev: number | null;
+    pending_latest: number | null;
+    pending_prev: number | null;
+    received_change_pct: number | null;
+    pending_change_pct: number | null;
+    received_is_series_high: boolean;
+    pending_is_series_high: boolean;
+  }[];
+
+  const headline = totals[0];
+  if (!headline) return null;
+
+  const agencyRows = (await sql`
+    WITH selected(agency) AS (
+      VALUES
+        ('Department of Homeland Security'),
+        ('Department of Veterans Affairs')
+    )
+    SELECT
+      selected.agency,
+      latest.received::int AS received_latest,
+      latest.pending_end::int AS pending_latest,
+      previous.pending_end::int AS pending_prev,
+      latest_staff.total_fte::float AS staff_latest,
+      previous_staff.total_fte::float AS staff_prev,
+      CASE WHEN previous_staff.total_fte > 0
+        THEN ROUND((latest_staff.total_fte - previous_staff.total_fte) / previous_staff.total_fte * 100, 1)::float
+        ELSE NULL
+      END AS staff_change_pct,
+      CASE WHEN previous.pending_end > 0
+        THEN ROUND((latest.pending_end::numeric - previous.pending_end) / previous.pending_end * 100, 1)::float
+        ELSE NULL
+      END AS pending_change_pct,
+      COALESCE(latest.received >= 1000000 AND NOT EXISTS (
+        SELECT 1
+        FROM foia_annual earlier
+        WHERE earlier.component = 'Agency Overall'
+          AND earlier.agency <> 'All agencies'
+          AND earlier.fiscal_year < ${headline.latest_fy}
+          AND earlier.received >= 1000000
+      ), false) AS first_over_million
+    FROM selected
+    LEFT JOIN foia_annual latest
+      ON latest.agency = selected.agency
+      AND latest.component = 'Agency Overall'
+      AND latest.fiscal_year = ${headline.latest_fy}
+    LEFT JOIN foia_annual previous
+      ON previous.agency = selected.agency
+      AND previous.component = 'Agency Overall'
+      AND previous.fiscal_year = ${headline.prev_fy}
+    LEFT JOIN foia_personnel latest_staff
+      ON latest_staff.agency = selected.agency
+      AND latest_staff.component = 'Agency Overall'
+      AND latest_staff.fiscal_year = ${headline.latest_fy}
+    LEFT JOIN foia_personnel previous_staff
+      ON previous_staff.agency = selected.agency
+      AND previous_staff.component = 'Agency Overall'
+      AND previous_staff.fiscal_year = ${headline.prev_fy}
+  `) as Omit<AnnualAgencyFinding, "slug">[];
+
+  const agencyMap = new Map(
+    agencyRows.map((row) => [
+      row.agency,
+      { ...row, slug: slugify(row.agency) },
+    ])
+  );
+
+  return {
+    ...headline,
+    homeland_security: agencyMap.get("Department of Homeland Security") ?? null,
+    veterans_affairs: agencyMap.get("Department of Veterans Affairs") ?? null,
+  };
+}
+
 // ---------- Quarterly ----------
 
 export type QuarterPeriod = { fy: number; q: number };

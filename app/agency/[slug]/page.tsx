@@ -85,6 +85,10 @@ export default async function AgencyPage({
   const latestAnnual = annual[annual.length - 1];
   const latestQuarter = quarterly[quarterly.length - 1];
   const firstAnnual = annual[0];
+  const annualSpanYears =
+    firstAnnual && latestAnnual
+      ? latestAnnual.fiscal_year - firstAnnual.fiscal_year + 1
+      : annual.length;
 
   const annualSeries = annual.map((r) => ({ x: r.fiscal_year, y: r.pending_end }));
   const quarterlyBacklogSeries = quarterly.map((r) => ({
@@ -155,7 +159,7 @@ export default async function AgencyPage({
           </div>
           <div className="border border-stone-200 rounded-lg p-5">
             <div className="text-xs uppercase tracking-wide text-stone-500">
-              17-year change
+              {annualSpanYears}-year change
             </div>
             <div
               className={`font-display text-3xl mt-2 ${
@@ -201,7 +205,7 @@ export default async function AgencyPage({
               fill="#1c1917"
               markers={annualMarkers()}
               showMarkerLabels
-              ariaLabel={`17-year annual backlog for ${detail.agency}`}
+              ariaLabel={`${annualSpanYears}-year annual backlog for ${detail.agency}`}
             />
             <div className="mt-3 grid grid-cols-3 md:grid-cols-9 gap-2 text-[10px] text-stone-500">
               {annual
@@ -362,7 +366,7 @@ export default async function AgencyPage({
 
         {/* Personnel */}
         {latestPersonnel && (
-          <section className="mt-10">
+          <section id="staffing" className="mt-10 scroll-mt-24">
             <h2 className="font-display text-2xl text-stone-900">
               FOIA staffing, FY{latestPersonnel.fiscal_year} ({fiscalYearDateRange(latestPersonnel.fiscal_year)})
             </h2>

@@ -31,8 +31,9 @@ export function MetricsExplainer({
               <strong>Window:</strong> full fiscal year, Oct 1 through Sept 30.
             </li>
             <li>
-              <strong>Coverage:</strong> every federal agency. 117 agencies
-              filed for FY2025 so far.
+              <strong>Coverage:</strong> intended for every reporting agency;
+              the current FY2025 bulk release contains 117 agency-overall
+              reports.
             </li>
             <li>
               <strong>Detail:</strong> received, processed, pending, exemption
@@ -72,7 +73,7 @@ export function MetricsExplainer({
               &ldquo;pending.&rdquo;
             </li>
             <li>
-              <strong>Freshness:</strong> usually about five weeks after
+              <strong>Freshness:</strong> usually about six weeks after
               quarter end.
             </li>
           </ul>

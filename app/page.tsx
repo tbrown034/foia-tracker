@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/SiteShell";
-import { Sparkline } from "@/components/Sparkline";
 import { QuarterlySmallMultiples } from "@/components/QuarterlySmallMultiples";
 import { CumulativeNetChart } from "@/components/CumulativeNetChart";
 import { BacklogTally } from "@/components/BacklogTally";
@@ -8,7 +7,6 @@ import { SlopeChartInteractive } from "@/components/SlopeChartInteractive";
 import { SlopeMobileList } from "@/components/SlopeMobileList";
 import { ThroughputPanel } from "@/components/ThroughputPanel";
 import { MetricsExplainer } from "@/components/MetricsExplainer";
-import { quarterlyMarkers } from "@/lib/admin-transitions";
 import {
   fiscalQuarterShort,
   fiscalQuarterDateRange,
@@ -17,9 +15,8 @@ import {
   type FiscalQuarter,
 } from "@/lib/fiscal";
 import {
-  getQuarterlyRanking,
+  getAnnualFindings,
   getMostRecentQuarter,
-  getWallOfShame,
   getQuarterlySmallMultiples,
   getReceivedVsProcessedTimeline,
   getAgenciesFilingPerQuarter,
@@ -42,18 +39,8 @@ function fmtDelta(pct: number | null): string {
   return `${sign}${pct.toFixed(1)}%`;
 }
 
-function deltaColor(pct: number | null): string {
-  if (pct == null) return "text-stone-400";
-  if (pct > 10) return "text-red-600";
-  if (pct < -10) return "text-emerald-600";
-  return "text-stone-500";
-}
-
-function sparkColor(pct: number | null): string {
-  if (pct == null) return "#a8a29e";
-  if (pct > 10) return "#dc2626";
-  if (pct < -10) return "#059669";
-  return "#57534e";
+function fmtMagnitude(pct: number | null): string {
+  return pct == null ? "—" : `${Math.abs(pct).toFixed(1)}%`;
 }
 
 function fmtDate(iso: string | null): string {
@@ -71,10 +58,9 @@ function retrievedLabel(iso: string | null): string {
 }
 
 export default async function Home() {
-  const [rows, period, wall, smallMultiples, rxVsProc, filing, slope, throughput, stats, syncs] = await Promise.all([
-    getQuarterlyRanking(25),
+  const [annualFindings, period, smallMultiples, rxVsProc, filing, slope, throughput, stats, syncs] = await Promise.all([
+    getAnnualFindings(),
     getMostRecentQuarter(),
-    getWallOfShame(5),
     getQuarterlySmallMultiples(10),
     getReceivedVsProcessedTimeline(),
     getAgenciesFilingPerQuarter(),
@@ -99,19 +85,6 @@ export default async function Home() {
   );
   const periodLabel = period
     ? fiscalQuarterShort(period.fy, period.q as FiscalQuarter)
-    : "—";
-  const periodDates = period
-    ? fiscalQuarterDateRange(period.fy, period.q as FiscalQuarter)
-    : "—";
-  const prevQ = period
-    ? period.q === 1
-      ? fiscalQuarterShort(period.fy - 1, 4)
-      : fiscalQuarterShort(period.fy, (period.q - 1) as FiscalQuarter)
-    : "—";
-  const prevQDates = period
-    ? period.q === 1
-      ? fiscalQuarterDateRange(period.fy - 1, 4)
-      : fiscalQuarterDateRange(period.fy, (period.q - 1) as FiscalQuarter)
     : "—";
 
   // Throughput-derived anecdote stats (no fabrication; all from the bars
@@ -170,7 +143,7 @@ export default async function Home() {
             <BacklogTally
               value={latestStableBacklog}
               asOf={periodEndLabel}
-              unitLine="pending federal FOIA requests"
+              unitLine="backlogged federal FOIA requests"
               sourceLine={`Across the 10 largest stable-filing agencies · ${periodLabel} · FOIA.gov quarterly reports`}
               footnote={heroFootnote}
             />
@@ -178,8 +151,8 @@ export default async function Home() {
         )}
 
         <p className="font-display text-stone-900 text-xl md:text-2xl leading-snug mt-8 max-w-3xl">
-          The highest level on record across the 10 largest stable-filing
-          federal agencies — a reversal of the Biden-era catch-up that had
+          The highest point in the five-year quarterly series across the 10
+          largest stable-filing federal agencies — a reversal of the Biden-era catch-up that had
           drawn the pile back near its FY2021 starting level. Another{" "}
           <span className="tabular-nums">{cliffDropoutCount}</span>{" "}
           agencies, including the Department of Homeland Security, last
@@ -187,6 +160,135 @@ export default async function Home() {
           have not filed since.
         </p>
       </article>
+
+      {annualFindings && (
+        <section
+          id="findings"
+          className="mx-auto max-w-5xl w-full px-6 mt-8 scroll-mt-24"
+        >
+          <div className="border-t border-stone-300 pt-8">
+            <div className="text-xs font-display [font-variant-caps:small-caps] tracking-wider text-stone-600">
+              Latest findings
+            </div>
+            <div className="mt-2 flex items-end justify-between gap-6 flex-wrap">
+              <div>
+                <h2 className="font-display text-3xl md:text-4xl text-stone-900 leading-tight">
+                  What the newest annual reports show
+                </h2>
+                <p className="font-display italic text-stone-600 text-base mt-2 max-w-3xl">
+                  FY{annualFindings.latest_fy} covers{" "}
+                  {fiscalYearDateRange(annualFindings.latest_fy)}. These
+                  figures are older but more detailed than the quarterly
+                  data above.
+                </p>
+              </div>
+              <Link
+                href="/data"
+                className="text-sm text-stone-600 underline hover:text-stone-900"
+              >
+                Inspect the source data
+              </Link>
+            </div>
+
+            <div className="mt-7 grid grid-cols-1 md:grid-cols-3 gap-px bg-stone-200 border border-stone-200">
+              <Link
+                href="/agencies"
+                className="group bg-white p-6 hover:bg-stone-50 transition-colors"
+              >
+                <div className="text-xs uppercase tracking-wide text-stone-500">
+                  Government-wide pending
+                </div>
+                <div className="font-display text-4xl text-stone-900 mt-3 tabular-nums">
+                  {fmt(annualFindings.pending_latest)}
+                </div>
+                <p className="text-sm text-stone-700 mt-3 leading-relaxed">
+                  {fmtDelta(annualFindings.pending_change_pct)} from FY
+                  {annualFindings.prev_fy}
+                  {annualFindings.pending_is_series_high
+                    ? " — the highest total in the 18-year series."
+                    : "."}{" "}
+                  The bulk release contains agency-overall reports from{" "}
+                  {annualFindings.latest_filers} agencies.
+                </p>
+                <div className="font-display text-sm text-stone-900 mt-5 group-hover:underline">
+                  See the annual ranking →
+                </div>
+              </Link>
+
+              {annualFindings.homeland_security && (
+                <Link
+                  href={`/agency/${annualFindings.homeland_security.slug}`}
+                  className="group bg-white p-6 hover:bg-stone-50 transition-colors"
+                >
+                  <div className="text-xs uppercase tracking-wide text-stone-500">
+                    Homeland Security received
+                  </div>
+                  <div className="font-display text-4xl text-stone-900 mt-3 tabular-nums">
+                    {fmt(annualFindings.homeland_security.received_latest)}
+                  </div>
+                  <p className="text-sm text-stone-700 mt-3 leading-relaxed">
+                    {annualFindings.homeland_security.first_over_million
+                      ? "The first agency in the 18-year series to cross one million requests in a fiscal year."
+                      : `Requests received in FY${annualFindings.latest_fy}.`}{" "}
+                    Its reported FOIA staffing fell{" "}
+                    {fmtMagnitude(
+                      annualFindings.homeland_security.staff_change_pct
+                    )}{" "}
+                    from FY{annualFindings.prev_fy}.
+                  </p>
+                  <div className="font-display text-sm text-stone-900 mt-5 group-hover:underline">
+                    Explore DHS →
+                  </div>
+                </Link>
+              )}
+
+              {annualFindings.veterans_affairs && (
+                <Link
+                  href={`/agency/${annualFindings.veterans_affairs.slug}#staffing`}
+                  className="group bg-white p-6 hover:bg-stone-50 transition-colors"
+                >
+                  <div className="text-xs uppercase tracking-wide text-stone-500">
+                    Veterans Affairs staffing
+                  </div>
+                  <div className="font-display text-4xl text-stone-900 mt-3 tabular-nums">
+                    {fmtDelta(
+                      annualFindings.veterans_affairs.staff_change_pct
+                    )}
+                  </div>
+                  <p className="text-sm text-stone-700 mt-3 leading-relaxed">
+                    Reported FOIA staffing fell from{" "}
+                    {annualFindings.veterans_affairs.staff_prev?.toFixed(1)} to{" "}
+                    {annualFindings.veterans_affairs.staff_latest?.toFixed(1)}
+                    {" "}FTE while pending requests rose{" "}
+                    {fmtDelta(
+                      annualFindings.veterans_affairs.pending_change_pct
+                    )}
+                    .
+                  </p>
+                  <div className="font-display text-sm text-stone-900 mt-5 group-hover:underline">
+                    Explore Veterans Affairs →
+                  </div>
+                </Link>
+              )}
+            </div>
+
+            <p className="font-display text-xs italic text-stone-600 mt-3 max-w-4xl leading-snug">
+              Source: FOIA.gov bulk Annual Report CSVs.{" "}
+              {annualFindings.latest_fy === 2025
+                ? "FY2025 was published June 9, 2026. "
+                : ""}
+              {bulkRetrieved} Comparisons use agency-overall rows from the
+              same annual source; they show what changed together, not what
+              caused the change.
+              {annualFindings.latest_filers < annualFindings.prev_filers
+                ? ` FY${annualFindings.latest_fy} totals remain partial because not every expected agency had filed.`
+                : ""}
+            </p>
+
+            <MetricsExplainer variant="detailed" className="mt-10" />
+          </div>
+        </section>
+      )}
 
 
       <section className="mx-auto max-w-5xl w-full px-6 mt-8">
@@ -280,7 +382,25 @@ export default async function Home() {
               >
                 NOTUS
               </a>
-              , Federal News Network, and Poynter has confirmed a broader
+              ,{" "}
+              <a
+                href="https://federalnewsnetwork.com/agency-oversight/2026/03/significant-staff-cuts-drive-rising-foia-backlogs/"
+                className="underline hover:text-stone-900"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Federal News Network
+              </a>
+              , and{" "}
+              <a
+                href="https://www.poynter.org/reporting-editing/2025/public-records-requests-trump-administration-federal-government-foia/"
+                className="underline hover:text-stone-900"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Poynter
+              </a>{" "}
+              have confirmed a broader
               collapse in agency FOIA program staffing — eliminated FOIA
               offices at OPM and CDC, more than 50% staff cuts at the
               Department of Education, and missed annual reporting
@@ -378,9 +498,6 @@ export default async function Home() {
             </a>
           </p>
         </div>
-
-  
-        <MetricsExplainer className="mt-12" />
       </section>
 
 
@@ -416,7 +533,7 @@ export default async function Home() {
           </li>
           <li>
             <a
-              href="https://americanoversight.org/"
+              href="https://americanoversight.org/not-all-federal-agencies-are-equal-when-it-comes-to-foia-response-times/"
               className="block group"
               target="_blank"
               rel="noreferrer"

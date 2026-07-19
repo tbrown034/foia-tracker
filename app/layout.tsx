@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "FOIA Tracker",
     description:
-      "Federal FOIA backlog dashboard. 17 years of agency data, ranked by where records requests go to die.",
+      "Federal FOIA backlog dashboard. 18 years of agency data, ranked by where records requests go to die.",
     url: SITE_URL,
     siteName: "FOIA Tracker",
     type: "website",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "FOIA Tracker",
     description:
-      "Federal FOIA backlog dashboard. 17 years of agency data, ranked by where records requests go to die.",
+      "Federal FOIA backlog dashboard. 18 years of agency data, ranked by where records requests go to die.",
   },
 };
 
@@ -50,7 +50,7 @@ const websiteJsonLd = {
   name: "FOIA Tracker",
   url: SITE_URL,
   description:
-    "Federal FOIA backlog dashboard. 17 years of agency-level data on Freedom of Information Act request processing.",
+    "Federal FOIA backlog dashboard. 18 years of agency-level data on Freedom of Information Act request processing.",
   potentialAction: {
     "@type": "SearchAction",
     target: `${SITE_URL}/agencies?q={search_term_string}`,

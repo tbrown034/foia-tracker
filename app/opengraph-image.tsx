@@ -100,7 +100,7 @@ export default function OGImage() {
             marginBottom: "auto",
           }}
         >
-          17 years of FOIA backlog data, ranking every federal agency by
+          18 years of FOIA backlog data, ranking every federal agency by
           response time, request age, and exemption use.
         </div>
         <div

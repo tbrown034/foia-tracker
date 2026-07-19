@@ -114,6 +114,17 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
         </nav>
+        <Link
+          href="/about#freshness"
+          className={`md:hidden block border-t px-5 py-2 text-xs font-display italic tabular-nums ${
+            isStale
+              ? "border-stone-200 text-stone-600 bg-stone-50"
+              : "border-amber-200 text-stone-900 bg-amber-50"
+          }`}
+        >
+          {quarterEnd ? `Data through ${quarterEnd}` : "Freshness unknown"}
+          {quarterEnd && syncedLabel ? ` · updated ${syncedLabel}` : ""}
+        </Link>
       </header>
 
       <main className="flex-1">{children}</main>

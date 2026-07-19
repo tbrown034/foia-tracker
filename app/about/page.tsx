@@ -6,7 +6,11 @@ import {
   fiscalYearDateRange,
   type FiscalQuarter,
 } from "@/lib/fiscal";
-import { getSiteFreshness } from "@/lib/queries";
+import {
+  getAnnualFindings,
+  getLatestSyncByEachSource,
+  getSiteFreshness,
+} from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +20,35 @@ export const metadata = {
     "Methodology, data sources, freshness, and caveats for FOIA Tracker.",
 };
 
+function fmtNumber(value: number | null | undefined): string {
+  return value == null ? "—" : value.toLocaleString();
+}
+
+function fmtPercent(value: number | null | undefined): string {
+  if (value == null) return "—";
+  return `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
+}
+
+function fmtPulled(iso: string | null | undefined): string {
+  if (!iso) return "pull date unavailable";
+  return `pulled ${new Date(iso).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  })}`;
+}
+
 export default async function AboutPage() {
-  const freshness = await getSiteFreshness();
+  const [freshness, annualFindings, syncs] = await Promise.all([
+    getSiteFreshness(),
+    getAnnualFindings(),
+    getLatestSyncByEachSource(),
+  ]);
+  const syncBySource = new Map(syncs.map((sync) => [sync.source, sync]));
+  const bulkPulled = fmtPulled(syncBySource.get("bulk-csv")?.ended_at);
+  const quarterlyPulled = fmtPulled(
+    syncBySource.get("quarterly-api")?.ended_at
+  );
   const annualLabel = freshness.annual_fy
     ? `FY${freshness.annual_fy} (${fiscalYearDateRange(freshness.annual_fy)})`
     : "unknown";
@@ -31,10 +62,6 @@ export default async function AboutPage() {
           freshness.quarterly_q as FiscalQuarter
         )})`
       : "unknown";
-  const fy2025AnnualStatus =
-    freshness.annual_fy != null && freshness.annual_fy >= 2025
-      ? "present in the current database."
-      : "not yet published in the current database. The Department of Justice Office of Information Policy is running late this year. We poll daily.";
   const annualFy = freshness.annual_fy ?? 2025;
   const annualSpanYears = annualFy - 2008 + 1;
 
@@ -53,25 +80,38 @@ export default async function AboutPage() {
         <section className="mt-10">
           <h2 className="font-display text-2xl text-stone-900">What this is</h2>
           <p className="text-stone-700 mt-3">
-            Federal FOIA backlogs are exploding. DoD&rsquo;s backlog grew 42%
-            to more than 30,000 pending requests by end of FY2025 (Sept 30,
-            2025). State Department&rsquo;s backlog grew from roughly 21,000
-            to 27,619 in one fiscal year. CDC&rsquo;s entire FOIA office was
-            eliminated in April 2025. OPM lost all of its FOIA staff.
+            The FY{annualFindings?.latest_fy ?? annualFy} annual release shows{" "}
+            {fmtNumber(annualFindings?.pending_latest)} requests still pending
+            at year-end, {fmtPercent(annualFindings?.pending_change_pct)} from
+            the prior year.
+            {annualFindings?.pending_is_series_high
+              ? " That is the highest total in the 18-year series,"
+              : " The current bulk release contains"}{" "}
+            {annualFindings?.pending_is_series_high ? "even though it contains only" : ""}{" "}
+            {annualFindings?.latest_filers ?? "—"} agency-overall reports.
           </p>
           <p className="text-stone-700 mt-3">
-            American Oversight has done the analysis. Their February 2025
-            article &ldquo;Not All Federal Agencies Are Equal When It Comes to
-            FOIA Response Times&rdquo; walked through the agency-level
-            disparity. Their{" "}
+            American Oversight has done the analysis. Their{" "}
+            <a
+              href="https://americanoversight.org/not-all-federal-agencies-are-equal-when-it-comes-to-foia-response-times/"
+              className="underline hover:text-stone-900"
+              target="_blank"
+              rel="noreferrer"
+            >
+              February 2025 article on agency response times
+            </a>{" "}
+            walked through the agency-level disparity. Their{" "}
             <a
               href="https://americanoversight.org/american-oversight-urges-congress-to-protect-and-strengthen-foia-during-unprecedented-attacks-on-transparency/"
               className="underline hover:text-stone-900"
+              target="_blank"
+              rel="noreferrer"
             >
               April 25, 2025 congressional testimony
             </a>{" "}
-            named the structural breakdown. Both pieces are static. This site
-            is the live, queryable version.
+            named the structural breakdown. This site makes the federal report
+            data underneath that problem easier to inspect, compare, and
+            download. It is not affiliated with American Oversight.
           </p>
         </section>
 
@@ -141,19 +181,12 @@ export default async function AboutPage() {
               JSON:API endpoint. Most recent in the database: {quarterlyLabel}.
               Authenticated via api.data.gov key.
             </li>
-            <li>
-              <strong>Agency Components API</strong> —{" "}
-              <code className="text-xs">api.foia.gov/api/agency_components</code>
-              . Used for canonical agency naming.
-            </li>
-            <li>
-              <strong>Annual report XML</strong> — per-agency, per-year NIEM
-              XML from{" "}
-              <code className="text-xs">api.foia.gov/api/annual-report-xml</code>
-              . Reserved for deeper component-level drill-down; the MVP uses
-              bulk CSVs for historical seeding.
-            </li>
           </ul>
+          <p className="text-sm text-stone-500 mt-4">
+            FOIA.gov also publishes Agency Components and annual XML APIs. The
+            current FOIA Tracker pipeline does not ingest either one; they are
+            not sources for the numbers shown here.
+          </p>
         </section>
 
         <section id="freshness" className="mt-10 scroll-mt-24">
@@ -162,14 +195,25 @@ export default async function AboutPage() {
           </h2>
           <ul className="mt-3 space-y-2 text-stone-700">
             <li>
-              <strong>Most recent annual:</strong> {annualLabel}.
+              <strong>Most recent annual:</strong> {annualLabel}. The FY2025
+              bulk ZIP was published by FOIA.gov on June 9, 2026 and was{" "}
+              {bulkPulled.replace(/^pulled /, "pulled into this database ")}.
             </li>
             <li>
-              <strong>Most recent quarterly:</strong> {quarterlyLabel}.
+              <strong>Most recent quarterly:</strong> {quarterlyLabel};{" "}
+              {quarterlyPulled} from the API.
             </li>
             <li>
-              <strong>FY2025 annual report:</strong> Oct 1, 2024 –
-              Sept 30, 2025; {fy2025AnnualStatus}
+              <strong>Annual coverage:</strong>{" "}
+              {annualFindings?.latest_filers ?? "—"} agency-overall reports in
+              FY{annualFindings?.latest_fy ?? annualFy}, compared with{" "}
+              {annualFindings?.prev_filers ?? "—"} in FY
+              {annualFindings?.prev_fy ?? annualFy - 1}. Government-wide totals
+              are not adjusted for missing reports.
+            </li>
+            <li>
+              <strong>Update process:</strong> syncs are run manually after a
+              source release is checked. No cron or automated poll is running.
             </li>
           </ul>
         </section>
@@ -199,9 +243,16 @@ export default async function AboutPage() {
             &ldquo;pending&rdquo; are intentionally kept on separate views
             because FOIA.gov defines them differently.
           </p>
+          <p className="text-stone-700 mt-3">
+            Homepage annual findings compare FY{annualFindings?.prev_fy ?? 2024}
+            {" "}with FY{annualFindings?.latest_fy ?? 2025} using agency-overall
+            rows from the same bulk release. Staffing and pending-request
+            changes are shown together as an editorial lead, not as proof that
+            one caused the other.
+          </p>
         </section>
 
-        <section className="mt-10">
+        <section id="reporting-gaps" className="mt-10 scroll-mt-24">
           <h2 className="font-display text-2xl text-stone-900">
             Agencies that have stopped filing
           </h2>
@@ -273,7 +324,25 @@ export default async function AboutPage() {
             >
               NOTUS
             </a>
-            , Federal News Network, and Poynter has confirmed a broader
+            ,{" "}
+            <a
+              href="https://federalnewsnetwork.com/agency-oversight/2026/03/significant-staff-cuts-drive-rising-foia-backlogs/"
+              className="underline hover:text-stone-900"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Federal News Network
+            </a>
+            , and{" "}
+            <a
+              href="https://www.poynter.org/reporting-editing/2025/public-records-requests-trump-administration-federal-government-foia/"
+              className="underline hover:text-stone-900"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Poynter
+            </a>{" "}
+            have confirmed a broader
             collapse in agency FOIA program staffing — the entire
             public-records team at OPM was fired in February 2025; CDC&rsquo;s
             FOIA office was eliminated in April 2025; the Department of
@@ -327,8 +396,8 @@ export default async function AboutPage() {
               ingest time.
             </li>
             <li>
-              DOJ retroactively revises prior years. We re-pull bulk CSVs
-              monthly.
+              DOJ retroactively revises prior years. Refreshes are manual, and
+              the latest pull date is shown above and on the data page.
             </li>
             <li>
               Ten-oldest &ldquo;days pending&rdquo; are working days, as
@@ -349,14 +418,16 @@ export default async function AboutPage() {
 
         <section className="mt-10">
           <h2 className="font-display text-2xl text-stone-900">
-            Refresh cadence
+            Refresh process
           </h2>
           <ul className="mt-3 space-y-2 text-stone-700">
-            <li>Bulk CSVs: monthly cron.</li>
-            <li>Quarterly API: weekly cron during a published quarter.</li>
             <li>
-              Annual XML for the current FY: daily poll until 200, then
-              weekly.
+              All syncs are manual. The annual bulk ZIP and quarterly API are
+              checked before an ingest is run.
+            </li>
+            <li>
+              A newly opened quarter is not treated as current until agency
+              coverage is substantial enough to support comparisons.
             </li>
             <li>All re-pulls are idempotent — safe to re-run.</li>
           </ul>

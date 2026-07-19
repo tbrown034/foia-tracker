@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/SiteShell";
 import {
+  getAnnualFindings,
   getDatasetCounts,
   getLatestSyncByEachSource,
   getMostRecentQuarter,
@@ -36,7 +37,7 @@ const DATASETS: Dataset[] = [
     name: "Annual report — headline",
     description:
       "Per agency-component, per fiscal year: requests pending at start, received, processed, pending at end. The core long-term series.",
-    source: "FOIA.gov bulk Annual Report ZIPs (FY2008–FY2025)",
+    source: "FOIA.gov bulk Annual Report ZIPs",
     columns: [
       "agency",
       "component",
@@ -147,10 +148,11 @@ function fmtTime(iso: string | null): string {
 }
 
 export default async function DataPage() {
-  const [counts, syncs, latestQuarter] = await Promise.all([
+  const [counts, syncs, latestQuarter, annualFindings] = await Promise.all([
     getDatasetCounts(),
     getLatestSyncByEachSource(),
     getMostRecentQuarter(),
+    getAnnualFindings(),
   ]);
 
   const syncBySource = new Map(syncs.map((s) => [s.source, s]));
@@ -193,7 +195,12 @@ export default async function DataPage() {
             </div>
             <div className="text-sm text-stone-500 mt-1">
               {bulkSync?.records?.toLocaleString() ?? "—"} rows ingested.
-              Bulk CSV ZIPs FY2008–FY2025.
+              Bulk CSV ZIPs FY2008–FY{annualFindings?.latest_fy ?? "—"};{" "}
+              {annualFindings?.latest_filers ?? "—"} agency-overall reports in
+              the newest year.
+              {annualFindings?.latest_fy === 2025
+                ? " FOIA.gov published the FY2025 ZIP June 9, 2026."
+                : ""}
             </div>
           </div>
           <div className="border border-stone-200 rounded-lg p-5">
@@ -233,6 +240,9 @@ export default async function DataPage() {
               </p>
               <div className="text-xs text-stone-500 mt-3">
                 Source: {d.source}
+                {d.key === "annual" && annualFindings
+                  ? ` (FY2008–FY${annualFindings.latest_fy})`
+                  : ""}
               </div>
               <div className="mt-4">
                 <div className="text-xs uppercase tracking-wide text-stone-500">
@@ -279,9 +289,9 @@ export default async function DataPage() {
               not legally required.
             </li>
             <li>
-              <strong>Refresh cadence.</strong> Bulk CSVs monthly, quarterly
-              API weekly during a published quarter. All ingest scripts are
-              idempotent — re-running them upserts in place.
+              <strong>Refresh process.</strong> Syncs are run manually after a
+              FOIA.gov release is checked. No cron is running. All ingest
+              scripts are idempotent — re-running them upserts in place.
             </li>
             <li>
               <strong>Schema.</strong> Postgres source-of-truth lives in{" "}

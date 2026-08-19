@@ -15,22 +15,28 @@ if (!apiKey) {
 
 const sql = neon(dbUrl);
 
-// Quarterly FOIA Report API coverage (verified 2026-05-04):
+// Quarterly FOIA Report API coverage (verified 2026-08-19):
 // - FY2020 and earlier: empty
 // - FY2021 Q1 onward: full data
 // We pull from FY2021 Q1 (Oct 1 – Dec 31, 2020) — Trump 1's last quarter —
-// through the most recent published quarter, FY2026 Q2 (Jan 1 – Mar 31, 2026).
-// 22 quarters total. Spans Trump 1 tail, all of Biden, and Trump 2 so far.
+// through the most recent substantially filled quarter, FY2026 Q3
+// (Apr 1 – Jun 30, 2026; 72 agency filings as of Aug 19, 2026).
+// 23 quarters total. Spans Trump 1 tail, all of Biden, and Trump 2 so far.
 function buildQuarters(): { fy: number; q: number }[] {
   const out: { fy: number; q: number }[] = [];
   for (let fy = 2026; fy >= 2021; fy--) {
-    const maxQ = fy === 2026 ? 2 : 4;
+    const maxQ = fy === 2026 ? 3 : 4;
     for (let q = maxQ; q >= 1; q--) {
       out.push({ fy, q });
     }
   }
   return out;
 }
+
+// Known placeholder rows on the API side: byte-identical copies of the prior
+// quarter's report, published in the prior quarter's revision batch rather
+// than filed for the new quarter. Verified 2026-08-19. Skip on ingest.
+const PLACEHOLDER_ROWS = new Set(["Office of the National Cyber Director|2026|3"]);
 
 const QUARTERS = buildQuarters();
 
@@ -96,6 +102,7 @@ async function fetchQuarter(fy: number, q: number): Promise<Row[]> {
           : undefined;
       const agencyName = (agencyEntity?.attributes?.name as string) ?? "";
       if (!agencyName) continue;
+      if (PLACEHOLDER_ROWS.has(`${agencyName}|${fy}|${q}`)) continue;
 
       const a = item.attributes;
       rows.push({
@@ -129,6 +136,18 @@ async function upsert(rows: Row[]): Promise<void> {
 }
 
 async function main() {
+  // Fetch every quarter before touching the database. The live site reads
+  // this table with no deploy step in between, so a mid-run API failure must
+  // abort with zero rows written — never leave a partially refreshed table.
+  const batches: Row[][] = [];
+  for (const { fy, q } of QUARTERS) {
+    console.log(`\nFY${fy} Q${q}`);
+    const rows = await fetchQuarter(fy, q);
+    console.log(`  fetched ${rows.length} rows`);
+    if (rows.length > 0) batches.push(rows);
+  }
+  const total = batches.reduce((n, b) => n + b.length, 0);
+
   const [logRow] = (await sql`
     INSERT INTO sync_log (source, started_at, status)
     VALUES ('quarterly-api', now(), 'running')
@@ -136,20 +155,13 @@ async function main() {
   `) as { id: number }[];
   const logId = logRow.id;
 
-  // Clear stale rows from the prior buggy ingest (different component values
-  // collapsed under the same primary key).
-  await sql`DELETE FROM foia_quarterly`;
-
-  let total = 0;
+  let written = 0;
   try {
-    for (const { fy, q } of QUARTERS) {
-      console.log(`\nFY${fy} Q${q}`);
-      const rows = await fetchQuarter(fy, q);
-      console.log(`  fetched ${rows.length} rows`);
-      if (rows.length === 0) continue;
+    for (const rows of batches) {
       await upsert(rows);
-      console.log(`  upserted ${rows.length} rows`);
-      total += rows.length;
+      written += rows.length;
+      const { fiscal_year, fiscal_quarter } = rows[0];
+      console.log(`FY${fiscal_year} Q${fiscal_quarter}: upserted ${rows.length} rows`);
     }
     await sql`
       UPDATE sync_log SET ended_at = now(), records = ${total}, status = 'ok'
@@ -159,7 +171,7 @@ async function main() {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await sql`
-      UPDATE sync_log SET ended_at = now(), records = ${total}, status = 'error', error = ${message}
+      UPDATE sync_log SET ended_at = now(), records = ${written}, status = 'error', error = ${message}
       WHERE id = ${logId}
     `;
     throw err;

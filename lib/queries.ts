@@ -348,10 +348,22 @@ export async function getAnnualFindings(): Promise<AnnualFindings | null> {
 
 export type QuarterPeriod = { fy: number; q: number };
 
+/**
+ * Minimum agency filings for a quarter to count as the site's "most recent."
+ * Quarters open with a trickle (FY2026 Q3 had 2 filings for weeks before
+ * filling to 72), and a single stub row must never advance every page.
+ * Recent full quarters run 72-94 filers; 50 rejects a partial quarter
+ * without rejecting the eroding-but-real cohort.
+ */
+const MIN_QUARTER_FILINGS = 50;
+
 export async function getMostRecentQuarter(): Promise<QuarterPeriod | null> {
   const rows = (await sql`
     SELECT fiscal_year, fiscal_quarter
     FROM foia_quarterly
+    WHERE component = 'Agency Overall' AND agency <> 'All agencies'
+    GROUP BY fiscal_year, fiscal_quarter
+    HAVING COUNT(DISTINCT agency) >= ${MIN_QUARTER_FILINGS}
     ORDER BY fiscal_year DESC, fiscal_quarter DESC
     LIMIT 1
   `) as { fiscal_year: number; fiscal_quarter: number }[];
@@ -500,7 +512,9 @@ const TOP_TEN_STABLE_FILERS = [
  * exposes (FY2021 Q1 → most recent). The set is fixed across all quarters
  * so the time series is genuinely apples-to-apples — agencies that
  * stopped filing under Trump 2 (DHS, VA, etc.) are not in this set and
- * therefore not silently dropping out mid-window.
+ * therefore not silently dropping out mid-window. The HAVING clause below
+ * enforces this at runtime: a quarter missing any of the ten is excluded
+ * entirely, so a late filer truncates the series instead of faking a drop.
  */
 export async function getReceivedVsProcessedTimeline(): Promise<ReceivedProcessedTimeline> {
   const recent = await getMostRecentQuarter();
@@ -524,6 +538,7 @@ export async function getReceivedVsProcessedTimeline(): Promise<ReceivedProcesse
     WHERE component = 'Agency Overall'
       AND agency = ANY(${TOP_TEN_STABLE_FILERS})
     GROUP BY fiscal_year, fiscal_quarter
+    HAVING COUNT(DISTINCT agency) = ${TOP_TEN_STABLE_FILERS.length}
     ORDER BY fiscal_year, fiscal_quarter
   `) as {
     fy: number;

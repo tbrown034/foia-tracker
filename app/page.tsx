@@ -83,9 +83,6 @@ export default async function Home() {
   const bulkRetrieved = retrievedLabel(
     syncBySource.get("bulk-csv")?.ended_at ?? null
   );
-  const periodLabel = period
-    ? fiscalQuarterShort(period.fy, period.q as FiscalQuarter)
-    : "—";
 
   // Throughput-derived anecdote stats (no fabrication; all from the bars
   // immediately below).
@@ -94,16 +91,28 @@ export default async function Home() {
   const worstThroughput = [...throughput].sort(
     (a, b) => a.catch_up_ratio - b.catch_up_ratio
   )[0];
-  const latestStableBacklog = rxVsProc.points.at(-1)?.total_backlog ?? null;
-  const periodEndIso = period
-    ? fiscalQuarterISORange(period.fy, period.q as FiscalQuarter).end
+  const stableTip = rxVsProc.points.at(-1) ?? null;
+  const latestStableBacklog = stableTip?.total_backlog ?? null;
+  // Whether the current stable-ten backlog is the series peak. Computed, not
+  // asserted — cohort math can move the tip below an earlier high.
+  const stableTipIsPeak =
+    stableTip != null &&
+    rxVsProc.points.every((p) => p.total_backlog <= stableTip.total_backlog);
+  // Date the tally from the stable-ten series tip, not the site-wide period:
+  // the timeline query drops quarters missing any of the ten, so its tip can
+  // trail the most recent quarter in the table.
+  const tallyEndIso = stableTip
+    ? fiscalQuarterISORange(stableTip.fy, stableTip.q as FiscalQuarter).end
     : null;
-  const periodEndLabel = periodEndIso
-    ? new Date(periodEndIso + "T00:00:00").toLocaleDateString("en-US", {
+  const tallyEndLabel = tallyEndIso
+    ? new Date(tallyEndIso + "T00:00:00").toLocaleDateString("en-US", {
         month: "long",
         day: "numeric",
         year: "numeric",
       })
+    : "—";
+  const tallyPeriodLabel = stableTip
+    ? fiscalQuarterShort(stableTip.fy, stableTip.q as FiscalQuarter)
     : "—";
 
   // When the next quarterly drop should land: agencies file roughly six
@@ -142,17 +151,19 @@ export default async function Home() {
           <div className="mt-8">
             <BacklogTally
               value={latestStableBacklog}
-              asOf={periodEndLabel}
+              asOf={tallyEndLabel}
               unitLine="backlogged federal FOIA requests"
-              sourceLine={`Across the 10 largest stable-filing agencies · ${periodLabel} · FOIA.gov quarterly reports`}
+              sourceLine={`Across the 10 largest stable-filing agencies · ${tallyPeriodLabel} · FOIA.gov quarterly reports`}
               footnote={heroFootnote}
             />
           </div>
         )}
 
         <p className="font-display text-stone-900 text-xl md:text-2xl leading-snug mt-8 max-w-3xl">
-          The highest point in the five-year quarterly series across the 10
-          largest stable-filing federal agencies — a reversal of the Biden-era catch-up that had
+          {stableTipIsPeak
+            ? "The highest point in the quarterly series across the 10 largest stable-filing federal agencies"
+            : "Near the peak of the quarterly series across the 10 largest stable-filing federal agencies"}{" "}
+          — a reversal of the Biden-era catch-up that had
           drawn the pile back near its FY2021 starting level. Another{" "}
           <span className="tabular-nums">{cliffDropoutCount}</span>{" "}
           agencies, including the Department of Homeland Security, last
@@ -302,8 +313,8 @@ export default async function Home() {
         <figcaption className="font-display italic text-stone-700 text-sm leading-relaxed max-w-3xl mt-6">
           The pile climbed through Biden&rsquo;s first half, dropped back
           near its FY2021 starting level by mid-2024 as agencies caught
-          up, then climbed to a new high through the first five quarters
-          of the Trump administration.
+          up, then climbed to a new high under the Trump
+          administration.
         </figcaption>
         <div className="mt-4">
           <CumulativeNetChart data={rxVsProc} />
@@ -368,11 +379,14 @@ export default async function Home() {
               Homeland Security — the federal government&rsquo;s biggest
               FOIA filer at roughly 225,000 requests per quarter — whose
               last filing was{" "}
-              <span className="not-italic">FY2025 Q3 (April–June 2025)</span>. Other notable absences include the Department
-              of Veterans Affairs, the State Department, the National
-              Archives and Records Administration, the Office of Personnel
-              Management, the Office of the Director of National
-              Intelligence, and the Office of Management and Budget.
+              <span className="not-italic">FY2025 Q3 (April–June 2025)</span>, reporting a backlog of 269,788 requests —
+              larger than every still-filing agency combined. Other
+              notable absences include the Department of Veterans
+              Affairs, the National Archives and Records Administration,
+              the Office of Personnel Management, and the Office of
+              Management and Budget. The State Department and the Office
+              of the Director of National Intelligence resumed filing
+              with FY2026 Q3 after missing two quarters.
               Outside reporting from{" "}
               <a
                 href="https://notus.org/trump-white-house/trump-administration-dismantling-foia"
@@ -478,7 +492,7 @@ export default async function Home() {
             <p className="font-display italic text-stone-700 text-base mt-4 max-w-prose leading-relaxed">
               Of the {throughput.length} highest-volume agencies on the
               list, {fallingBehindCount} closed fewer requests than they
-              received over the five quarters. The widest gap was at{" "}
+              received over that stretch. The widest gap was at{" "}
               {worstThroughput.agency}, which processed{" "}
               <span className="not-italic tabular-nums">
                 {Math.round(worstThroughput.catch_up_ratio * 100)}%

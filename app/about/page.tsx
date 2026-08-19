@@ -257,9 +257,9 @@ export default async function AboutPage() {
             Agencies that have stopped filing
           </h2>
           <p className="text-stone-700 mt-3">
-            23 federal agencies that had been reporting quarterly FOIA
+            15 federal agencies that had been reporting quarterly FOIA
             data last did so between April and December 2025 and have
-            not filed since, through FY2026 Q2 (Jan–Mar 2026). The list,
+            not filed since, through FY2026 Q3 (Apr–Jun 2026). The list,
             grouped by the last quarter each agency filed, with their
             FY2024 average requests received per quarter where available:
           </p>
@@ -278,9 +278,7 @@ export default async function AboutPage() {
           <ul className="text-sm text-stone-700 mt-2 space-y-1">
             <li>Department of Veterans Affairs (~23,774/q)</li>
             <li>Small Business Administration (~1,318/q)</li>
-            <li>National Railroad Passenger Corporation (~187/q)</li>
             <li>Office of National Drug Control Policy (~23/q)</li>
-            <li>Millennium Challenge Corporation (~18/q)</li>
             <li>Office of the Intellectual Property Enforcement Coordinator (~11/q)</li>
             <li>National Capital Planning Commission (~9/q)</li>
           </ul>
@@ -289,30 +287,32 @@ export default async function AboutPage() {
           </h3>
           <ul className="text-sm text-stone-700 mt-2 space-y-1">
             <li>National Archives and Records Administration (~14,179/q)</li>
-            <li>U.S. Department of State (~5,473/q)</li>
-            <li>Consumer Financial Protection Bureau (~244/q)</li>
             <li>Office of Personnel Management (~242/q)</li>
-            <li>Council on Environmental Quality (~105/q)</li>
-            <li>Office of the Director of National Intelligence (~103/q)</li>
             <li>Office of Special Counsel (~61/q)</li>
             <li>Institute of Museum and Library Services (~52/q)</li>
-            <li>Federal Energy Regulatory Commission (~33/q)</li>
-            <li>Inter-American Foundation (~13/q)</li>
             <li>United States Access Board (~10/q)</li>
             <li>James Madison Memorial Fellowship Foundation (no FY2024 baseline)</li>
           </ul>
           <p className="text-stone-700 mt-5">
-            Six agencies that had gone dark for one or more quarters
-            resumed filing with FY2026 Q2: the Department of Agriculture,
-            the General Services Administration, the Consumer Product
-            Safety Commission, the Office of the United States Trade
-            Representative, the U.S. Trade and Development Agency, and the
-            Office of Science and Technology Policy. In the other
-            direction, the National Archives and Records Administration —
-            a top-ten FOIA agency at roughly 14,000 requests received per
-            quarter in FY2024 — and the James Madison Memorial Fellowship
-            Foundation have no FY2026 Q2 report in the current FOIA.gov
-            data; FY2026 Q1 is their most recent filing.
+            Filing status churns rather than strictly shrinking. Several
+            agencies that had gone dark for one or more quarters have
+            since resumed: the Department of Agriculture, the General
+            Services Administration, and the Office of the United States
+            Trade Representative now file steadily again, and with FY2026
+            Q3 the State Department, the Office of the Director of
+            National Intelligence, the Consumer Financial Protection
+            Bureau, the Federal Energy Regulatory Commission, the
+            Inter-American Foundation, Amtrak, and the Millennium
+            Challenge Corporation all returned. In the other direction,
+            12 agencies that filed FY2026 Q2 have no Q3 report in the
+            current FOIA.gov data — among them the CIA, HUD, the FTC, and
+            the Consumer Product Safety Commission. Several of those
+            filed their Q2 reports months late, so some are likely late
+            rather than gone; they are not counted in the list above. The
+            National Archives and Records Administration — a top-ten FOIA
+            agency at roughly 14,000 requests received per quarter in
+            FY2024 — remains dark, with FY2026 Q1 its most recent
+            filing.
           </p>
           <p className="text-stone-700 mt-5 leading-relaxed">
             Outside reporting from{" "}
@@ -356,7 +356,7 @@ export default async function AboutPage() {
             Education, and Energy. Six smaller entities — among them the
             U.S. Institute of Peace and the Council of the Inspectors
             General on Integrity and Efficiency — still had no FY2025
-            annual report as of July 2026.
+            annual report as of August 2026.
           </p>
         </section>
 

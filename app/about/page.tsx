@@ -400,6 +400,13 @@ export default async function AboutPage() {
               the latest pull date is shown above and on the data page.
             </li>
             <li>
+              The National Archives&rsquo; FY2024 Q2–Q4 quarterly reports on
+              FOIA.gov carry numbers identical to its FY2023 Q2–Q4 filings —
+              an apparent upstream reporting error, verified against the API
+              in August 2026. Treat NARA&rsquo;s FY2024 quarterly line with
+              caution.
+            </li>
+            <li>
               Ten-oldest &ldquo;days pending&rdquo; are working days, as
               agencies report them. Where an agency&rsquo;s reported days
               exceed the calendar days since its own received date — a

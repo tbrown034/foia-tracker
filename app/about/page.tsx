@@ -346,7 +346,7 @@ export default async function AboutPage() {
             >
               Poynter
             </a>{" "}
-            have confirmed a broader
+            has confirmed a broader
             collapse in agency FOIA program staffing — the entire
             public-records team at OPM was fired in February 2025; CDC&rsquo;s
             FOIA office was eliminated in April 2025; the Department of

@@ -414,7 +414,7 @@ export default async function Home() {
               >
                 Poynter
               </a>{" "}
-              have confirmed a broader
+              has confirmed a broader
               collapse in agency FOIA program staffing — eliminated FOIA
               offices at OPM and CDC, more than 50% staff cuts at the
               Department of Education, and missed annual reporting

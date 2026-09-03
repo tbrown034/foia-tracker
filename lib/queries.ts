@@ -58,6 +58,7 @@ export type DatasetCounts = {
   oldest_pending: number;
   exemptions: number;
   personnel: number;
+  slope: number;
 };
 
 export async function getDatasetCounts(): Promise<DatasetCounts> {
@@ -75,12 +76,14 @@ export async function getDatasetCounts(): Promise<DatasetCounts> {
     }[];
     counts[t] = r?.n ?? 0;
   }
+  const slopeData = await getSlopeChartData();
   return {
     annual: counts.foia_annual,
     quarterly: counts.foia_quarterly,
     oldest_pending: counts.foia_oldest_pending,
     exemptions: counts.foia_exemptions,
     personnel: counts.foia_personnel,
+    slope: slopeData.points.length,
   };
 }
 

@@ -139,7 +139,7 @@ const DATASETS: Dataset[] = [
     ],
     csvUrl: "/api/data/slope.csv",
     svgUrl: "/api/chart/slope.svg",
-    countKey: "quarterly",
+    countKey: "slope",
   },
 ];
 

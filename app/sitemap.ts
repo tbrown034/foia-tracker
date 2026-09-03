@@ -3,7 +3,7 @@ import { getAllAgencySlugs } from "@/lib/queries";
 
 const SITE_URL = "https://www.foiatracker.org";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();

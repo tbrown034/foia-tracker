@@ -301,13 +301,16 @@ export default async function AboutPage() {
             Filing status churns rather than strictly shrinking. Several
             agencies that had gone dark for one or more quarters have
             since resumed: the Department of Agriculture, the General
-            Services Administration, and the Office of the United States
-            Trade Representative now file steadily again, and with FY2026
-            Q3 the State Department, the Office of the Director of
-            National Intelligence, the Consumer Financial Protection
-            Bureau, the Federal Energy Regulatory Commission, the
-            Inter-American Foundation, Amtrak, and the Millennium
-            Challenge Corporation all returned. In the other direction,
+            Services Administration and the Office of the United States
+            Trade Representative now file steadily again, and the Office
+            of the Director of National Intelligence returned with FY2026
+            Q3 after missing one quarter. Several other agencies that
+            earlier appeared to have stopped filing, including the State
+            Department, the Consumer Financial Protection Bureau, the
+            Federal Energy Regulatory Commission, the Inter-American
+            Foundation, Amtrak and the Millennium Challenge Corporation,
+            have since backfilled late reports and now show an unbroken
+            series through FY2026 Q3. In the other direction,
             12 agencies that filed FY2026 Q2 have no Q3 report in the
             current FOIA.gov data — among them the CIA, HUD, the FTC, and
             the Consumer Product Safety Commission. Several of those

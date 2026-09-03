@@ -384,9 +384,9 @@ export default async function Home() {
               notable absences include the Department of Veterans
               Affairs, the National Archives and Records Administration,
               the Office of Personnel Management, and the Office of
-              Management and Budget. The State Department and the Office
+              Management and Budget. The Office
               of the Director of National Intelligence resumed filing
-              with FY2026 Q3 after missing two quarters.
+              with FY2026 Q3 after missing one quarter.
               Outside reporting from{" "}
               <a
                 href="https://notus.org/trump-white-house/trump-administration-dismantling-foia"

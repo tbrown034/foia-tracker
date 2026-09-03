@@ -4,6 +4,7 @@ import { SiteShell } from "@/components/SiteShell";
 import { Sparkline } from "@/components/Sparkline";
 import { ExemptionBars } from "@/components/ExemptionBars";
 import { MetricsExplainer } from "@/components/MetricsExplainer";
+import { SITE_URL } from "@/lib/site";
 import { annualMarkers, quarterlyMarkers } from "@/lib/admin-transitions";
 import {
   fiscalQuarterLabel,
@@ -50,10 +51,13 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const detail = await getAgencyDetail(slug);
-  if (!detail) return { title: "Agency not found — FOIA Tracker" };
+  if (!detail) return { title: "Agency not found" };
   return {
-    title: `${detail.agency} — FOIA Tracker`,
+    title: detail.agency,
     description: `FOIA backlog and processing data for ${detail.agency}, FY2008 through the most recent quarterly report.`,
+    alternates: {
+      canonical: `${SITE_URL}/agency/${slug}`,
+    },
   };
 }
 

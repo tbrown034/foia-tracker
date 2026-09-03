@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/SiteShell";
+import { SITE_URL } from "@/lib/site";
 import {
   getAnnualFindings,
   getDatasetCounts,
@@ -15,9 +16,12 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Data downloads — FOIA Tracker",
+  title: "Data",
   description:
     "Every dataset behind FOIA Tracker, downloadable as CSV. Public domain. Schema docs included.",
+  alternates: {
+    canonical: `${SITE_URL}/data`,
+  },
 };
 
 type Dataset = {

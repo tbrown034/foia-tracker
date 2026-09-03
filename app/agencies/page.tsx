@@ -3,8 +3,18 @@ import { SiteShell } from "@/components/SiteShell";
 import { Sparkline } from "@/components/Sparkline";
 import { annualMarkers } from "@/lib/admin-transitions";
 import { getAnnualRanking } from "@/lib/queries";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "Agencies",
+  description:
+    "Every federal agency ranked by FOIA backlog, backlog change, and staffing context.",
+  alternates: {
+    canonical: `${SITE_URL}/agencies`,
+  },
+};
 
 function fmt(n: number | null): string {
   if (n == null) return "—";

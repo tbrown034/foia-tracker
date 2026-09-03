@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -15,7 +16,6 @@ const instrumentSerif = Instrument_Serif({
   weight: "400",
 });
 
-const SITE_URL = "https://www.foiatracker.org";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

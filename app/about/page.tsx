@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/SiteShell";
+import { SITE_URL } from "@/lib/site";
 import {
   fiscalQuarterDateRange,
   fiscalQuarterShort,
@@ -15,9 +16,12 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "About — FOIA Tracker",
+  title: "About",
   description:
     "Methodology, data sources, freshness, and caveats for FOIA Tracker.",
+  alternates: {
+    canonical: `${SITE_URL}/about`,
+  },
 };
 
 function fmtNumber(value: number | null | undefined): string {

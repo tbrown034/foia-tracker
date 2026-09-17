@@ -85,8 +85,8 @@ export function MetricsExplainer({
           <strong>Why we keep them on separate views.</strong> The two
           &ldquo;pending&rdquo; counts use different denominators, so plotting
           them on a single continuous timeline would misrepresent the
-          underlying change. Within each series, comparisons are clean —
-          quarter-over-quarter, year-over-year. Across series, only the
+          underlying change. Within each report type, comparisons are clean —
+          quarter-over-quarter, year-over-year. Across report types, only the
           direction of change is comparable, not the magnitude.
         </div>
       )}
@@ -94,7 +94,7 @@ export function MetricsExplainer({
       {variant === "compact" && (
         <p className="mt-4 text-xs text-stone-500">
           Bottom line: trust quarter-over-quarter and year-over-year
-          comparisons within a single series. Be careful when comparing a
+          comparisons within a single report type. Be careful when comparing a
           quarterly number to an annual number — the definitions differ.
         </p>
       )}

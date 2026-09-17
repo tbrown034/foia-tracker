@@ -347,7 +347,7 @@ export default async function Home() {
         id="pile"
         className="mx-auto max-w-5xl w-full px-6 mt-8 scroll-mt-24"
       >
-        <div className="border-t border-stone-300 pt-8">
+        <div className="pt-4">
           <div className="text-xs font-display [font-variant-caps:small-caps] tracking-wider text-stone-600">
             Since then
           </div>

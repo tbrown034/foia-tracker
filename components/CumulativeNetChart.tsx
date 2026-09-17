@@ -274,7 +274,7 @@ export function CumulativeNetChart({ data }: Props) {
             fontFamily="ui-monospace, monospace"
             fontStyle="italic"
           >
-            backlogged requests
+            backlogged
           </text>
           <text
             x={x(last.x) + 10}

@@ -189,8 +189,11 @@ export default async function Home() {
                 <p className="font-display italic text-stone-600 text-base mt-2 max-w-3xl">
                   FY{annualFindings.latest_fy} covers{" "}
                   {fiscalYearDateRange(annualFindings.latest_fy)}. These
-                  figures are older but more detailed than the quarterly
-                  data above.
+                  figures are older but wider than the quarterly data above:
+                  they count every open request at every reporting agency,
+                  including the ones that no longer file quarterly, not just
+                  overdue requests at the ten stable filers. That is why the
+                  totals run several times larger.
                 </p>
               </div>
               <Link
@@ -207,7 +210,7 @@ export default async function Home() {
                 className="group bg-white p-6 hover:bg-stone-50 transition-colors"
               >
                 <div className="text-xs uppercase tracking-wide text-stone-500">
-                  Government-wide pending
+                  Government-wide pending, all agencies
                 </div>
                 <div className="font-display text-4xl text-stone-900 mt-3 tabular-nums">
                   {fmt(annualFindings.pending_latest)}

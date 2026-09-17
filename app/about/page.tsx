@@ -89,7 +89,7 @@ export default async function AboutPage() {
             at year-end, {fmtPercent(annualFindings?.pending_change_pct)} from
             the prior year.
             {annualFindings?.pending_is_series_high
-              ? " That is the highest total in the 18-year series,"
+              ? " That is the highest total in 18 years of reports,"
               : " The current bulk release contains"}{" "}
             {annualFindings?.pending_is_series_high ? "even though it contains only" : ""}{" "}
             {annualFindings?.latest_filers ?? "—"} agency-overall reports.
@@ -310,7 +310,7 @@ export default async function AboutPage() {
             Federal Energy Regulatory Commission, the Inter-American
             Foundation, Amtrak and the Millennium Challenge Corporation,
             have since backfilled late reports and now show an unbroken
-            series through FY2026 Q3. In the other direction,
+            run of filings through FY2026 Q3. In the other direction,
             12 agencies that filed FY2026 Q2 have no Q3 report in the
             current FOIA.gov data — among them the CIA, HUD, the FTC, and
             the Consumer Product Safety Commission. Several of those

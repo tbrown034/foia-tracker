@@ -181,7 +181,7 @@ export default async function Home() {
             {fmtDelta(annualFindings.pending_change_pct)} from FY
             {annualFindings.prev_fy}
             {annualFindings.pending_is_series_high
-              ? " and the highest total in the 18-year series"
+              ? " and the highest total in 18 years of reports"
               : ""}
             . Requests still open at the end of the fiscal year, across
             every agency that filed an annual report.
@@ -194,7 +194,7 @@ export default async function Home() {
                 {stableTipIsPeak ? "at a new high" : "near its high"} as of{" "}
                 {tallyEndLabel}.{" "}
                 <a href="#pile" className="underline hover:text-stone-600">
-                  See the quarterly series
+                  See the quarterly reports
                 </a>
                 .
               </>
@@ -203,8 +203,8 @@ export default async function Home() {
         ) : (
           <p className="font-display text-stone-900 text-xl md:text-2xl leading-snug mt-8 max-w-3xl">
             {stableTipIsPeak
-              ? "The highest point in the quarterly series across the 10 largest stable-filing federal agencies"
-              : "Near the peak of the quarterly series across the 10 largest stable-filing federal agencies"}{" "}
+              ? "The highest quarterly backlog on record across the 10 largest stable-filing federal agencies"
+              : "Near the highest quarterly backlog on record across the 10 largest stable-filing federal agencies"}{" "}
             — a reversal of the Biden-era catch-up that had drawn the pile
             back near its FY2021 starting level.
           </p>
@@ -257,7 +257,7 @@ export default async function Home() {
                   {fmtDelta(annualFindings.received_change_pct)} from FY
                   {annualFindings.prev_fy}
                   {annualFindings.received_is_series_high
-                    ? " — the most in the 18-year series."
+                    ? " — the most in 18 years of reports."
                     : "."}{" "}
                   The bulk release contains agency-overall reports from{" "}
                   {annualFindings.latest_filers} agencies.
@@ -280,7 +280,7 @@ export default async function Home() {
                   </div>
                   <p className="text-sm text-stone-700 mt-3 leading-relaxed">
                     {annualFindings.homeland_security.first_over_million
-                      ? "The first agency in the 18-year series to cross one million requests in a fiscal year."
+                      ? "The first agency in 18 years of reports to cross one million requests in a fiscal year."
                       : `Requests received in FY${annualFindings.latest_fy}.`}{" "}
                     Its reported FOIA staffing fell{" "}
                     {fmtMagnitude(
@@ -357,7 +357,7 @@ export default async function Home() {
           <p className="font-display italic text-stone-600 text-base mt-2 max-w-3xl">
             Quarterly reports are narrower but fresher: they count only
             requests past the statutory deadline, and only at agencies
-            that still file. This series follows the 10 largest agencies
+            that still file. This chart follows the 10 largest agencies
             that have filed every quarter since FY2021.
           </p>
         </div>
@@ -375,8 +375,8 @@ export default async function Home() {
         )}
         <p className="font-display text-stone-900 text-lg md:text-xl leading-snug mt-6 max-w-3xl">
           {stableTipIsPeak
-            ? "The highest point in the quarterly series"
-            : "Near the peak of the quarterly series"}{" "}
+            ? "The highest quarterly backlog since FY2021, where this chart begins"
+            : "Near the highest quarterly backlog since FY2021, where this chart begins"}{" "}
           — a reversal of the Biden-era catch-up that had drawn the pile
           back near its FY2021 starting level. Another{" "}
           <span className="tabular-nums">{cliffDropoutCount}</span>{" "}

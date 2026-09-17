@@ -129,7 +129,14 @@ export default async function Home() {
         new Date(nextQEndIso + "T00:00:00").getTime() + 42 * 24 * 60 * 60 * 1000
       ).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : null;
-  const heroFootnote =
+  const annualFootnote = annualFindings
+    ? `Annual reports are the fullest count FOIA.gov publishes, but they run on a long lag: FY${annualFindings.latest_fy} covers ${fiscalYearDateRange(
+        annualFindings.latest_fy
+      )}${
+        annualFindings.latest_fy === 2025 ? " and was published June 9, 2026" : ""
+      }. For what has happened since, see the quarterly reports below.`
+    : undefined;
+  const quarterlyFootnote =
     nextQ && nextQExpectedLabel
       ? `This is the newest quarter agencies have filed. New data lands on a lag — quarterly reports arrive roughly six weeks after a quarter closes, so ${fiscalQuarterShort(
           nextQ.fy,
@@ -137,7 +144,7 @@ export default async function Home() {
         )} (${fiscalQuarterDateRange(
           nextQ.fy,
           nextQ.q
-        )}) is expected around mid-${nextQExpectedLabel}. Annual reports run further behind: FY2025 published in June 2026.`
+        )}) is expected around mid-${nextQExpectedLabel}.`
       : undefined;
 
   return (
@@ -147,29 +154,61 @@ export default async function Home() {
           Investigating the federal <span className="italic">FOIA backlog</span>
         </h1>
 
-        {latestStableBacklog != null && (
+        {annualFindings?.pending_latest != null ? (
+          <div className="mt-8">
+            <BacklogTally
+              value={annualFindings.pending_latest}
+              asOf={`September 30, ${annualFindings.latest_fy}`}
+              unitLine="pending federal FOIA requests"
+              sourceLine={`Government-wide, ${annualFindings.latest_filers} agencies · FY${annualFindings.latest_fy} annual reports · FOIA.gov`}
+              footnote={annualFootnote}
+            />
+          </div>
+        ) : latestStableBacklog != null ? (
           <div className="mt-8">
             <BacklogTally
               value={latestStableBacklog}
               asOf={tallyEndLabel}
               unitLine="backlogged federal FOIA requests"
               sourceLine={`Across the 10 largest stable-filing agencies · ${tallyPeriodLabel} · FOIA.gov quarterly reports`}
-              footnote={heroFootnote}
+              footnote={quarterlyFootnote}
             />
           </div>
-        )}
+        ) : null}
 
-        <p className="font-display text-stone-900 text-xl md:text-2xl leading-snug mt-8 max-w-3xl">
-          {stableTipIsPeak
-            ? "The highest point in the quarterly series across the 10 largest stable-filing federal agencies"
-            : "Near the peak of the quarterly series across the 10 largest stable-filing federal agencies"}{" "}
-          — a reversal of the Biden-era catch-up that had
-          drawn the pile back near its FY2021 starting level. Another{" "}
-          <span className="tabular-nums">{cliffDropoutCount}</span>{" "}
-          agencies, including the Department of Homeland Security, last
-          filed a quarterly report between April and December 2025 and
-          have not filed since.
-        </p>
+        {annualFindings?.pending_latest != null ? (
+          <p className="font-display text-stone-900 text-xl md:text-2xl leading-snug mt-8 max-w-3xl">
+            {fmtDelta(annualFindings.pending_change_pct)} from FY
+            {annualFindings.prev_fy}
+            {annualFindings.pending_is_series_high
+              ? " and the highest total in the 18-year series"
+              : ""}
+            . Requests still open at the end of the fiscal year, across
+            every agency that filed an annual report.
+            {latestStableBacklog != null ? (
+              <>
+                {" "}
+                The quarterly reports filed since then, covering the{" "}
+                <span className="tabular-nums">10</span> largest agencies
+                still reporting, show their backlog{" "}
+                {stableTipIsPeak ? "at a new high" : "near its high"} as of{" "}
+                {tallyEndLabel}.{" "}
+                <a href="#pile" className="underline hover:text-stone-600">
+                  See the quarterly series
+                </a>
+                .
+              </>
+            ) : null}
+          </p>
+        ) : (
+          <p className="font-display text-stone-900 text-xl md:text-2xl leading-snug mt-8 max-w-3xl">
+            {stableTipIsPeak
+              ? "The highest point in the quarterly series across the 10 largest stable-filing federal agencies"
+              : "Near the peak of the quarterly series across the 10 largest stable-filing federal agencies"}{" "}
+            — a reversal of the Biden-era catch-up that had drawn the pile
+            back near its FY2021 starting level.
+          </p>
+        )}
       </article>
 
       {annualFindings && (
@@ -188,12 +227,10 @@ export default async function Home() {
                 </h2>
                 <p className="font-display italic text-stone-600 text-base mt-2 max-w-3xl">
                   FY{annualFindings.latest_fy} covers{" "}
-                  {fiscalYearDateRange(annualFindings.latest_fy)}. These
-                  figures are older but wider than the quarterly data above:
-                  they count every open request at every reporting agency,
-                  including the ones that no longer file quarterly, not just
-                  overdue requests at the ten stable filers. That is why the
-                  totals run several times larger.
+                  {fiscalYearDateRange(annualFindings.latest_fy)}. One
+                  report per agency per year, with staffing, exemptions, and
+                  the oldest open requests. Every figure here comes from the
+                  same bulk release as the number above.
                 </p>
               </div>
               <Link
@@ -210,16 +247,17 @@ export default async function Home() {
                 className="group bg-white p-6 hover:bg-stone-50 transition-colors"
               >
                 <div className="text-xs uppercase tracking-wide text-stone-500">
-                  Government-wide pending, all agencies
+                  Government-wide received
                 </div>
                 <div className="font-display text-4xl text-stone-900 mt-3 tabular-nums">
-                  {fmt(annualFindings.pending_latest)}
+                  {fmt(annualFindings.received_latest)}
                 </div>
                 <p className="text-sm text-stone-700 mt-3 leading-relaxed">
-                  {fmtDelta(annualFindings.pending_change_pct)} from FY
+                  New requests filed in FY{annualFindings.latest_fy},{" "}
+                  {fmtDelta(annualFindings.received_change_pct)} from FY
                   {annualFindings.prev_fy}
-                  {annualFindings.pending_is_series_high
-                    ? " — the highest total in the 18-year series."
+                  {annualFindings.received_is_series_high
+                    ? " — the most in the 18-year series."
                     : "."}{" "}
                   The bulk release contains agency-overall reports from{" "}
                   {annualFindings.latest_filers} agencies.
@@ -305,13 +343,46 @@ export default async function Home() {
       )}
 
 
-      <section className="mx-auto max-w-5xl w-full px-6 mt-8">
-        <h2 className="font-display text-3xl md:text-4xl text-stone-900 leading-tight max-w-3xl">
-          The pile, over time
-        </h2>
-        <p className="font-display italic text-stone-600 text-base mt-2 max-w-3xl">
-          Combined backlog of the 10 largest stable-filing agencies, every
-          quarter from FY2021 to today.
+      <section
+        id="pile"
+        className="mx-auto max-w-5xl w-full px-6 mt-8 scroll-mt-24"
+      >
+        <div className="border-t border-stone-300 pt-8">
+          <div className="text-xs font-display [font-variant-caps:small-caps] tracking-wider text-stone-600">
+            Since then
+          </div>
+          <h2 className="font-display text-3xl md:text-4xl text-stone-900 leading-tight max-w-3xl mt-2">
+            The pile, over time
+          </h2>
+          <p className="font-display italic text-stone-600 text-base mt-2 max-w-3xl">
+            Quarterly reports are narrower but fresher: they count only
+            requests past the statutory deadline, and only at agencies
+            that still file. This series follows the 10 largest agencies
+            that have filed every quarter since FY2021.
+          </p>
+        </div>
+        {latestStableBacklog != null && (
+          <div className="mt-6">
+            <BacklogTally
+              value={latestStableBacklog}
+              asOf={tallyEndLabel}
+              unitLine="backlogged requests at the 10 largest stable-filing agencies"
+              sourceLine={`${tallyPeriodLabel} · FOIA.gov quarterly reports`}
+              footnote={quarterlyFootnote}
+              size="compact"
+            />
+          </div>
+        )}
+        <p className="font-display text-stone-900 text-lg md:text-xl leading-snug mt-6 max-w-3xl">
+          {stableTipIsPeak
+            ? "The highest point in the quarterly series"
+            : "Near the peak of the quarterly series"}{" "}
+          — a reversal of the Biden-era catch-up that had drawn the pile
+          back near its FY2021 starting level. Another{" "}
+          <span className="tabular-nums">{cliffDropoutCount}</span>{" "}
+          agencies, including the Department of Homeland Security, last
+          filed a quarterly report covering a period between April and
+          December 2025 and have not filed since.
         </p>
         <figcaption className="font-display italic text-stone-700 text-sm leading-relaxed max-w-3xl mt-6">
           The pile climbed through Biden&rsquo;s first half, dropped back

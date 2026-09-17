@@ -274,7 +274,7 @@ export function CumulativeNetChart({ data }: Props) {
             fontFamily="ui-monospace, monospace"
             fontStyle="italic"
           >
-            pending requests
+            backlogged requests
           </text>
           <text
             x={x(last.x) + 10}
@@ -337,14 +337,14 @@ export function CumulativeNetChart({ data }: Props) {
             fill="#44403c"
             fontFamily="ui-monospace, monospace"
           >
-            Pending FOIA requests, end of quarter
+            Backlogged FOIA requests, end of quarter
           </text>
         </svg>
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 px-4 pb-3 text-xs font-display italic text-stone-700">
         <span className="text-stone-500 not-italic">
-          Sum of pending FOIA requests across {agencies.length} agencies
+          Sum of backlogged FOIA requests across {agencies.length} agencies
           (DOJ, DoD, HHS, DOT, EEOC, Labor, SEC, Interior, EPA, Education)
           — every one filed every quarter from FY2021 Q1 through{" "}
           {last.label.split(" (")[0]}.

@@ -10,6 +10,8 @@ type Props = {
   /** Optional asterisk footnote explaining the as-of date. */
   footnote?: string;
   durationMs?: number;
+  /** "hero" is the page-lead size; "compact" is for section-level tallies. */
+  size?: "hero" | "compact";
 };
 
 function easeOutCubic(t: number): number {
@@ -23,6 +25,7 @@ export function BacklogTally({
   sourceLine,
   footnote,
   durationMs = 1800,
+  size = "hero",
 }: Props) {
   const [n, setN] = useState(0);
 
@@ -48,9 +51,19 @@ export function BacklogTally({
   }, [value, durationMs]);
 
   return (
-    <div className="border-y border-stone-300 py-6 md:py-8">
+    <div
+      className={
+        size === "hero"
+          ? "border-y border-stone-300 py-6 md:py-8"
+          : "border-y border-stone-200 py-5 md:py-6"
+      }
+    >
       <div
-        className="font-mono tabular-nums text-stone-900 leading-none tracking-tight text-6xl sm:text-7xl md:text-8xl lg:text-[9rem]"
+        className={
+          size === "hero"
+            ? "font-mono tabular-nums text-stone-900 leading-none tracking-tight text-6xl sm:text-7xl md:text-8xl lg:text-[9rem]"
+            : "font-mono tabular-nums text-stone-900 leading-none tracking-tight text-5xl sm:text-6xl md:text-7xl"
+        }
         aria-label={`${value.toLocaleString()} ${unitLine} as of ${asOf}`}
       >
         {n.toLocaleString()}
